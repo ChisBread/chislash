@@ -4,6 +4,7 @@
 # 使用
 ```bash
 sudo docker run --name chislash --restart unless-stopped -d \
+    -e DASH_PORT=8080 \
     -p 7890:7890 \
     -p 7891:7891 \
     -p 7892:7892 \
