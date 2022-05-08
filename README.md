@@ -10,24 +10,25 @@
 version: "3.4"
 services:
   chislash:
-    privileged: true
     image: chisbread/chislash
     container_name: chislash
     environment:
-      - TZ=Asia/Shanghai
-      - CLASH_HTTP_PORT=7890
-      - CLASH_SOCKS_PORT=7891
-      - CLASH_TPROXY_PORT=7892
-      - CLASH_MIXED_PORT=7893
-      - DASH_PORT=8080 # RESTful API端口(同时也是Web UI端口 e.g. http://IP:8080/ui)
-      - IP_ROUTE=1 # 开启透明代理 optional (default:1)
-      - UDP_PROXY=1 # 开启透明代理-UDP转发(当代理节点不支持UDP时,可关闭) optional (default:1)
+      - TZ=Asia/Shanghai        # optional
+      - CLASH_HTTP_PORT=7890    # optional (default:7890)
+      - CLASH_SOCKS_PORT=7891   # optional (default:7891)
+      - CLASH_TPROXY_PORT=7892  # optional (default:7892)
+      - CLASH_MIXED_PORT=7893   # optional (default:7893)
+      - DASH_PORT=8080          # optional (default:8080) RESTful API端口(同时也是Web UI端口 e.g. http://IP:8080/ui)
+      - IP_ROUTE=1              # optional (default:1) 开启透明代理
+      - UDP_PROXY=1             # optional (default:1) 开启透明代理-UDP转发(当代理节点不支持UDP时,可关闭)
+      - LOG_LEVEL=info          # optional (default:info) 日志等级
     volumes:
-      - <path to config>:/etc/clash
-    network_mode: "host"
+      - <path to config>:/etc/clash # required config.yaml的存放路径
+    network_mode: "host"            # required 如果开启IP_ROUTE, 则必须是host
+    privileged: true                # required 如果开启IP_ROUTE, 则必须是true
     restart: unless-stopped
 ```
-- docker run
+- docker run (参考docker-compose)
 ```bash
 sudo docker run --privileged --network="host" --name chislash --restart unless-stopped -d \
     -e CLASH_HTTP_PORT=7890 \
