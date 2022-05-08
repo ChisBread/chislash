@@ -4,10 +4,11 @@ RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y wget xz-utils iproute2 iptables python3 python3-yaml \
     && rm -rf /var/lib/apt/lists/*
-ARG CLASHVER=v1.10.0
-RUN wget https://github.com/Dreamacro/clash/releases/download/$CLASHVER/clash-linux-amd64-$CLASHVER.gz \
-    && gunzip clash-linux-amd64-$CLASHVER.gz \
-    && mv clash-linux-amd64-$CLASHVER /usr/bin/clash \
+ARG ARCH=amd64
+ARG CLASHVER=v1.10.6
+RUN wget https://github.com/Dreamacro/clash/releases/download/$CLASHVER/clash-linux-$ARCH-$CLASHVER.gz \
+    && gunzip clash-linux-$ARCH-$CLASHVER.gz \
+    && mv clash-linux-$ARCH-$CLASHVER /usr/bin/clash \
     && chmod 774 /usr/bin/clash
 ARG YACDVER=v0.3.4
 RUN wget https://github.com/haishanh/yacd/releases/download/$YACDVER/yacd.tar.xz \
