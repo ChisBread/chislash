@@ -3,12 +3,12 @@
 
 # 使用
 ```bash
-sudo docker run --name chislash --restart unless-stopped -d \
+sudo docker run --privileged --network="host" --name chislash --restart unless-stopped -d \
     -e DASH_PORT=8080 \
-    -p 7890:7890 \
-    -p 7891:7891 \
-    -p 7892:7892 \
-    -p 8080:8080 \
+    -e CLASH_HTTP_PORT=7890 \
+    -e CLASH_SOCKS_PORT=7891 \
+    -e CLASH_REDIR_PORT=7892 \
+    -e CLASH_MIXED_PORT=7893 \
     -v /path/to/etc/clash:/etc/clash \
     chisbread/chislash:latest
 ```
@@ -16,21 +16,19 @@ sudo docker run --name chislash --restart unless-stopped -d \
 version: "3.4"
 services:
   chislash:
+    privileged: true
     image: chisbread/chislash
     container_name: chislash
     environment:
       - TZ=Asia/Shanghai
-      - CLASH_MIXED_PORT=7890
+      - CLASH_HTTP_PORT=7890
       - CLASH_SOCKS_PORT=7891
-      - CLASH_HTTP_PORT=7892
+      - CLASH_REDIR_PORT=7892
+      - CLASH_MIXED_PORT=7893
       - DASH_PORT=8080
     volumes:
       - <path to config>:/etc/clash
-    ports:
-      - 7890:7890
-      - 7891:7891
-      - 7892:7892
-      - 8080:8080
+    network_mode: "host"
     restart: unless-stopped
 ```
 # 感谢
