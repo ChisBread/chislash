@@ -13,7 +13,7 @@ sudo docker run --name chislash --restart unless-stopped -d \
     chisbread/chislash:latest
 ```
 ```yaml
-version: "0.1"
+version: "3.4"
 services:
   chislash:
     image: chisbread/chislash
