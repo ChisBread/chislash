@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# set -ex
+set -ex
 
 # ENABLE ipv4 forward
 sysctl -w net.ipv4.ip_forward=1
