@@ -26,8 +26,9 @@ iptables -t mangle -A CLASH -d 240.0.0.0/4 -j RETURN
 
 # 其他所有流量转向到 $CLASH_TPROXY_PORT 端口，并打上 mark
 iptables -t mangle -A CLASH -p tcp -j TPROXY --on-port $CLASH_TPROXY_PORT --tproxy-mark 666
-iptables -t mangle -A CLASH -p udp -j TPROXY --on-port $CLASH_TPROXY_PORT --tproxy-mark 666
-
+if [ "$UDP_PROXY" == "1" ]; then
+    iptables -t mangle -A CLASH -p udp -j TPROXY --on-port $CLASH_TPROXY_PORT --tproxy-mark 666
+fi
 # 转发所有 DNS 查询到 1053 端口
 # 此操作会导致所有 DNS 请求全部返回虚假 IP(fake ip 198.18.0.1/16)
 # iptables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to 1053
@@ -72,12 +73,14 @@ iptables -t mangle -A CLASH_LOCAL -d 240.0.0.0/4 -j RETURN
 
 # 为本机发出的流量打 mark
 iptables -t mangle -A CLASH_LOCAL -p tcp -j MARK --set-mark 666
-iptables -t mangle -A CLASH_LOCAL -p udp -j MARK --set-mark 666
-
+if [ "$UDP_PROXY" == "1" ]; then
+    iptables -t mangle -A CLASH_LOCAL -p udp -j MARK --set-mark 666
+fi
 # 跳过 CLASH 程序本身发出的流量, 防止死循环(CLASH 程序需要使用 "CLASH" 用户启动) 
 iptables -t mangle -A OUTPUT -p tcp -m owner --uid-owner clash -j RETURN
-iptables -t mangle -A OUTPUT -p udp -m owner --uid-owner clash -j RETURN
-
+if [ "$UDP_PROXY" == "1" ]; then
+    iptables -t mangle -A OUTPUT -p udp -m owner --uid-owner clash -j RETURN
+fi
 # 让本机发出的流量跳转到 CLASH_LOCAL
 # CLASH_LOCAL 链会为本机流量打 mark, 打过 mark 的流量会重新回到 PREROUTING 上
 iptables -t mangle -A OUTPUT -j CLASH_LOCAL
