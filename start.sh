@@ -39,8 +39,11 @@ su - clash -c '/usr/bin/clash -d /etc/clash -ext-ctl '"0.0.0.0:$DASH_PORT"' -ext
 EXPID=$!
 while :
 do
+    set +e
     PID=`ps -def|grep -P '^clash'|awk '{print $2}'`
-    if [ "$PID" == "" ]; then
+    PORT_EXIST=`ss -tlnp| awk '{print $4}'|grep -P ".*:$CLASH_TPROXY_PORT"`
+    set -e
+    if [ "$PID" == "" ] || [ "$PORT_EXIST" == "" ]; then
         EXPID_EXIST=$(ps aux | awk '{print $2}'| grep -w $EXPID)
         if [ ! $EXPID_EXIST ];then
             cat /etc/clash/clash.log
