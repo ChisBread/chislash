@@ -17,15 +17,16 @@ RUN wget https://github.com/haishanh/yacd/releases/download/$YACDVER/yacd.tar.xz
     && chmod -R a+r /default/clash
 ENV CLASH_HTTP_PORT=7890
 ENV CLASH_SOCKS_PORT=7891
-ENV CLASH_REDIR_PORT=7892
+ENV CLASH_TPROXY_PORT=7892
 ENV CLASH_MIXED_PORT=7893
 ENV DASH_PORT=8080
 ENV IPROUTE=1
 ENV LOG_LEVEL="info"
 ENV SECRET=""
-EXPOSE $CLASH_HTTP_PORT $CLASH_SOCKS_PORT $CLASH_REDIR_PORT $CLASH_MIXED_PORT $DASH_PORT
+EXPOSE $CLASH_HTTP_PORT $CLASH_SOCKS_PORT $CLASH_TPROXY_PORT $CLASH_MIXED_PORT $DASH_PORT
 VOLUME /etc/clash
-COPY start.sh /start.sh
+COPY *.sh /
 COPY utils /default/clash/utils
-RUN chmod +x /start.sh
+RUN chmod +x /*.sh
+RUN useradd -g root -s /bin/bash -u 1086 -m clash && setcap 'cap_net_admin,cap_net_bind_service,cap_net_raw=+ep' /usr/bin/clash
 ENTRYPOINT [ "/start.sh" ]

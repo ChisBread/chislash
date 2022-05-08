@@ -7,7 +7,7 @@ sudo docker run --privileged --network="host" --name chislash --restart unless-s
     -e DASH_PORT=8080 \
     -e CLASH_HTTP_PORT=7890 \
     -e CLASH_SOCKS_PORT=7891 \
-    -e CLASH_REDIR_PORT=7892 \
+    -e CLASH_TPROXY_PORT=7892 \
     -e CLASH_MIXED_PORT=7893 \
     -v /path/to/etc/clash:/etc/clash \
     chisbread/chislash:latest
@@ -23,7 +23,7 @@ services:
       - TZ=Asia/Shanghai
       - CLASH_HTTP_PORT=7890
       - CLASH_SOCKS_PORT=7891
-      - CLASH_REDIR_PORT=7892
+      - CLASH_TPROXY_PORT=7892
       - CLASH_MIXED_PORT=7893
       - DASH_PORT=8080
     volumes:

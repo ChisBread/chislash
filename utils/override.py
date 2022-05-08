@@ -4,27 +4,33 @@ import sys
 import os
 from collections.abc import Mapping
 ext_template = r"""
+redir-port: 0
 port: %s
 socks-port: %s
-redir-port: %s
+tproxy-port: %s
 mixed-port: %s
-
+bind-address: '*'
 allow-lan: true
-mode: Rule
 log-level: %s
 dns:
   enable: true
   listen: 0.0.0.0:1053
   enhanced-mode: redir-host
+  default-nameserver:
+    - 180.76.76.76
+    - 223.5.5.5
+    - 119.29.29.29
   nameserver:
-    - '114.114.114.114'
-    - '223.5.5.5'
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+ 
   fallback:
     - 'tls://1.1.1.1:853'
     - 'tcp://1.1.1.1:53'
     - 'tcp://208.67.222.222:443'
     - 'tls://dns.google'
 """
+
 def deep_update(source, overrides):
     """
     Update a nested dictionary or similar mapping.
@@ -45,6 +51,6 @@ def override(user_config, ext):
     yaml.dump(user, user_file)
     user_file.close()
 
-_,user_config,port,socks_port,redir_port,mixed_port,log_level = sys.argv
-override(user_config,yaml.load(ext_template%(port,socks_port,redir_port,mixed_port,log_level), Loader=yaml.FullLoader))
+_,user_config,port,socks_port,tproxy_port,mixed_port,log_level = sys.argv
+override(user_config,yaml.load(ext_template%(port,socks_port,tproxy_port,mixed_port,log_level), Loader=yaml.FullLoader))
 
