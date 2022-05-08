@@ -46,6 +46,11 @@ def deep_update(source, overrides):
 
 def override(user_config, must_config, ext):
     user = yaml.load(open(user_config, 'r', encoding="utf-8").read(), Loader=yaml.FullLoader)
+    for dnskey in ['default-nameserver', 'nameserver', 'fallback']:
+      if 'dns' in user and dnskey in user['dns'] and user['dns'][dnskey]:
+        ed = ext['dns']
+        del ed[dnskey]
+        ext['dns'] = ed
     deep_update(user, ext)
     if must_config:
       must = yaml.load(open(must_config, 'r', encoding="utf-8").read(), Loader=yaml.FullLoader)
