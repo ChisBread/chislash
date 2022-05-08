@@ -22,6 +22,7 @@ services:
       - IP_ROUTE=1              # optional (default:1) 开启透明代理
       - UDP_PROXY=1             # optional (default:1) 开启透明代理-UDP转发(当代理节点不支持UDP时,可关闭)
       - LOG_LEVEL=info          # optional (default:info) 日志等级
+      - MUST_CONFIG=<path(in container!!) to required config> # optional 不能被覆盖的设置项
     volumes:
       - <path to config>:/etc/clash # required config.yaml的存放路径
     network_mode: "host"            # required 如果开启IP_ROUTE, 则必须是host

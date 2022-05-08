@@ -15,6 +15,7 @@ RUN wget https://github.com/haishanh/yacd/releases/download/$YACDVER/yacd.tar.xz
     && tar xvf yacd.tar.xz -C /default/clash/dashboard \
     && wget https://geolite.clash.dev/Country.mmdb -O /default/clash/Country.mmdb \
     && chmod -R a+r /default/clash
+ENV MUST_CONFIG=""
 ENV CLASH_HTTP_PORT=7890
 ENV CLASH_SOCKS_PORT=7891
 ENV CLASH_TPROXY_PORT=7892

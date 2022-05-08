@@ -38,7 +38,7 @@ if [ "$IP_ROUTE" == "1" ]; then
     echo "done."
 fi
 cp /etc/clash/config.yaml /etc/clash/config.yaml.org
-python3 /default/clash/utils/override.py "/etc/clash/config.yaml" "$CLASH_HTTP_PORT" "$CLASH_SOCKS_PORT" "$CLASH_TPROXY_PORT" "$CLASH_MIXED_PORT" "$LOG_LEVEL"
+python3 /default/clash/utils/override.py "/etc/clash/config.yaml" "$MUST_CONFIG" "$CLASH_HTTP_PORT" "$CLASH_SOCKS_PORT" "$CLASH_TPROXY_PORT" "$CLASH_MIXED_PORT" "$LOG_LEVEL"
 chmod -R a+rw /etc/clash
 su - clash -c '/usr/bin/clash -d /etc/clash -ext-ctl "0.0.0.0:$DASH_PORT" -ext-ui /etc/clash/dashboard/public' 2>&1 >/etc/clash/clash.log &
 echo $! > /var/clash.pid

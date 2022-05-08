@@ -44,13 +44,16 @@ def deep_update(source, overrides):
             source[key] = overrides[key]
     return source
 
-def override(user_config, ext):
+def override(user_config, must_config, ext):
     user = yaml.load(open(user_config, 'r', encoding="utf-8").read(), Loader=yaml.FullLoader)
     deep_update(user, ext)
+    if must_config:
+      must = yaml.load(open(must_config, 'r', encoding="utf-8").read(), Loader=yaml.FullLoader)
+      deep_update(user, must)
     user_file = open(user_config, 'w', encoding="utf-8")
     yaml.dump(user, user_file)
     user_file.close()
 
-_,user_config,port,socks_port,tproxy_port,mixed_port,log_level = sys.argv
-override(user_config,yaml.load(ext_template%(port,socks_port,tproxy_port,mixed_port,log_level), Loader=yaml.FullLoader))
+_,user_config,must_config,port,socks_port,tproxy_port,mixed_port,log_level = sys.argv
+override(user_config, must_config, yaml.load(ext_template%(port,socks_port,tproxy_port,mixed_port,log_level), Loader=yaml.FullLoader))
 
