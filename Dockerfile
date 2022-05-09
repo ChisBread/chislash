@@ -28,8 +28,9 @@ ENV LOG_LEVEL="info"
 ENV SECRET=""
 EXPOSE $CLASH_HTTP_PORT $CLASH_SOCKS_PORT $CLASH_TPROXY_PORT $CLASH_MIXED_PORT $DASH_PORT
 VOLUME /etc/clash
-COPY *.sh /
+COPY start.sh /
+COPY transparent_proxy /transparent_proxy
 COPY utils /default/clash/utils
-RUN chmod +x /*.sh
+RUN chmod +x /transparent_proxy/*
 RUN useradd -g root -s /bin/bash -u 1086 -m clash && setcap 'cap_net_admin,cap_net_bind_service,cap_net_raw=+ep' /usr/bin/clash
 ENTRYPOINT [ "/start.sh" ]

@@ -1,10 +1,10 @@
 #!/bin/bash
 set -ex
 setroute() {
-    /setup_iptables.sh
+    /transparent_proxy/tproxy.start
 }
 unsetroute() {
-    /unset_iptables.sh
+    /transparent_proxy/tproxy.stop
 }
 #清理
 _term() {
