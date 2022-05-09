@@ -28,6 +28,9 @@ _term() {
         __=`unsetroute 2>&1 >/dev/null` || true
         echolog "done."
     fi
+    if [ -f "/etc/clash/config.yaml.org" ] && [ "$BAK_AN_REC" == "1" ]; then
+        cp /etc/clash/config.yaml /etc/clash/config.yaml.org || true
+    fi
     mv /etc/clash/config.yaml.org /etc/clash/config.yaml || true
     pid=`cat /var/subconverter.pid` || true
     __=`kill -9 ${pid} 2>&1 >/dev/null` || true
@@ -35,9 +38,6 @@ _term() {
 }
 trap _term SIGTERM SIGINT ERR
 # 初始化 /etc/clash
-if [ ! -f "/etc/clash/config.yaml" ]; then
-    echolog "mixed-port: $CLASH_MIXED_PORT" > /etc/clash/config.yaml
-fi
 if [ ! -f "/etc/clash/Country.mmdb" ]; then
     cp -arp /default/clash/Country.mmdb /etc/clash/Country.mmdb
 fi
@@ -48,7 +48,9 @@ if [ ! -d "/etc/clash/subconverter" ]; then
     cp -arp /default/subconverter /etc/clash/subconverter
 fi
 # 备份原始设置
-cp /etc/clash/config.yaml /etc/clash/config.yaml.org
+if [ -f "/etc/clash/config.yaml" ] && [ "$BAK_AN_REC" == "1" ]; then
+    cp /etc/clash/config.yaml /etc/clash/config.yaml.org || true
+fi
 # 启动订阅转换服务
 if [ "$ENABLE_SUBCONV" == "1" ]; then
     nohup /etc/clash/subconverter/subconverter 2>&1 >/etc/clash/subconverter.log &

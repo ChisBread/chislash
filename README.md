@@ -15,6 +15,7 @@ services:
     container_name: chislash
     environment:
       - TZ=Asia/Shanghai        # optional
+      - BAK_AN_REC=1            # optional (default:1) 启动时备份config.yaml, 停止时还原
       - CLASH_HTTP_PORT=7890    # optional (default:7890)
       - CLASH_SOCKS_PORT=7891   # optional (default:7891)
       - CLASH_TPROXY_PORT=7892  # optional (default:7892)
