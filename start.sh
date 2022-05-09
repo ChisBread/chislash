@@ -16,8 +16,13 @@ unsetroute() {
     fi
 }
 file_expired() {
+    if [ ! -f "$1" ]; then
+        echo -1
+        exit 0
+    fi
     if [ $2 -eq 0 ]; then
         echo 0
+        exit 0
     fi
     last=`stat -c %Y $1`
     now=`date +%s`
@@ -27,6 +32,7 @@ file_expired() {
     else
         echo $(($2 - $since))
     fi
+    exit 0
 }
 #清理
 _term() {
@@ -71,7 +77,7 @@ fi
 # 转换订阅
 if [ "$SUBSCR_URLS" != "" ]; then
     SINCE=`file_expired /etc/clash/.subscr_expr $SUBSCR_EXPR`
-    if [ "$SINCE" == "-1" ]; then
+    if [ "$SINCE" == "-1" ] || [ ! -f "/etc/clash/config.yaml" ]; then
         echolog "订阅已过期 重新订阅中..."
         # 如果依赖本地订阅, 但没有启动服务;
         if [ "`echo "$SUBSCR_URLS" |grep 'http://127.0.0.1:25500/sub'`" != "" ] && [ "$ENABLE_SUBCONV" != "1" ]; then
