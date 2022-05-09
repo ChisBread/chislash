@@ -29,6 +29,8 @@ _term() {
         echolog "done."
     fi
     mv /etc/clash/config.yaml.org /etc/clash/config.yaml || true
+    pid=`cat /var/subconverter.pid` || true
+    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
     exit 0
 }
 trap _term SIGTERM SIGINT ERR
@@ -42,7 +44,25 @@ fi
 if [ ! -d "/etc/clash/dashboard" ]; then
     cp -arp /default/clash/dashboard /etc/clash/dashboard
 fi
+if [ ! -d "/etc/clash/subconverter" ]; then
+    cp -arp /default/subconverter /etc/clash/subconverter
+fi
+# 备份原始设置
 cp /etc/clash/config.yaml /etc/clash/config.yaml.org
+# 启动订阅转换服务
+if [ "$ENABLE_SUBCONV" == "1" ]; then
+    nohup /etc/clash/subconverter/subconverter 2>&1 >/etc/clash/subconverter.log &
+    echo $! > /var/subconverter.pid
+fi
+# 转换订阅
+if [ "$SUBSCR_URLS" != "" ]; then
+    sleep 2
+    curl --get \
+        --data-urlencode "target=clash" \
+        --data-urlencode "url=$SUBSCR_URLS" \
+        --data-urlencode "config=$REMOTE_CONV_RULE" \
+        "$SUBCONV_URL" > /etc/clash/config.yaml
+fi
 python3 /default/clash/utils/override.py "/etc/clash/config.yaml" "$MUST_CONFIG" "$CLASH_HTTP_PORT" "$CLASH_SOCKS_PORT" "$CLASH_TPROXY_PORT" "$CLASH_MIXED_PORT" "$LOG_LEVEL"
 chmod -R a+rw /etc/clash
 su - clash -c '/usr/bin/clash -d /etc/clash -ext-ctl '"0.0.0.0:$DASH_PORT"' -ext-ui /etc/clash/dashboard/public' 2>&1 >/etc/clash/clash.log &

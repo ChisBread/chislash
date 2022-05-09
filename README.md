@@ -24,7 +24,11 @@ services:
       - UDP_PROXY=1             # optional (default:1) 开启透明代理-UDP转发(当代理节点不支持UDP时,可关闭)
       - IPV6_PROXY=0            # optional (default:1) 开启IPv6透明代理
       - LOG_LEVEL=info          # optional (default:info) 日志等级
-      - MUST_CONFIG=<path(in container!!) to must.yaml> # optional 不能被覆盖的设置项 (e.g. /etc/clash/must.yaml)
+      - ENABLE_SUBCONV=1        # optional (default:1) 开启本地订阅转换服务, 指定SUBSCR_URLS, 且没有外部订阅转换服务时, 需要为1
+      - SUBCONV_URL=http://127.0.0.1:25500/sub          # optional (default:"http://127.0.0.1:25500/sub") 订阅转换服务地址
+      - SUBSCR_URLS=<URLs split by '|'>                 # optional 订阅的节点链接, 用'|'分隔, 会覆盖原有的config.yaml
+      - REMOTE_CONV_RULE=<URL of remote rule>           # optional (default:ACL4SSR的规则链接)订阅转换规则
+      - MUST_CONFIG=<path(in container!!) to must.yaml> # optional 不能被覆盖的设置项, 最高优先级 (e.g. /etc/clash/must.yaml)
     volumes:
       - <path to config>:/etc/clash # required config.yaml的存放路径
     network_mode: "host"            # required 如果开启IP_ROUTE, 则必须是host
