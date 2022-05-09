@@ -4,13 +4,16 @@
 IP_CMD='ip'
 IPTABLES_CMD='iptables'
 IP_STACK='ipv4'
-NO_PROXY_IP=("0.0.0.0/8" "127.0.0.0/8" "10.0.0.0/8" "172.0.0.0/8" "192.168.0.0/16" "169.254.0.0/16" "224.0.0.0/4" "240.0.0.0/4")
+# 保留地址 https://zh.m.wikipedia.org/zh-hans/%E4%BF%9D%E7%95%99IP%E5%9C%B0%E5%9D%80
+NO_PROXY_IP=("0.0.0.0/8" "10.0.0.0/8" "100.64.0.0/10" "127.0.0.0/8" "169.254.0.0/16" "172.16.0.0/12" "192.0.0.0/24" "192.0.2.0/24" \
+"192.88.99.0/24" "192.168.0.0/16" "198.18.0.0/15" "198.51.100.0/24" "203.0.113.0/24" "224.0.0.0/4" "233.252.0.0/24" "240.0.0.0/4" "255.255.255.255/32")
 # 第一个参数决定IPv4/IPv6
 if [ "$1" == "ipv6" ]; then
     IP_CMD='ip -6'
     IPTABLES_CMD='ip6tables'
     IP_STACK='ipv6'
-    NO_PROXY_IP=(`ip a|grep inet6| awk '{print $2}'|grep -v -P '^(:|f)'` "::/128" "::1/128" "::ffff:0:0/96" "::ffff:0:0:0/96" "64:ff9b::/96" "100::/64" "2001::/32" "2001:20::/28" "2001:db8::/32" "2002::/16" "fc00::/7" "fe80::/10" "ff00::/8")
+    NO_PROXY_IP=(`ip a|grep inet6| awk '{print $2}'|grep -v -P '^(:|f)'` "::/128" "::1/128" "::ffff:0:0/96" "::ffff:0:0:0/96" \
+    "64:ff9b::/96" "100::/64" "2001::/32" "2001:20::/28" "2001:db8::/32" "2002::/16" "fc00::/7" "fe80::/10" "ff00::/8")
 fi
 if [ "`lsmod |grep nf_tproxy_$IP_STACK`" == "" ]; then
     echo "tproxy is not supported"
@@ -35,7 +38,6 @@ fi
 $IPTABLES_CMD -t mangle -N CLASH || true
 $IPTABLES_CMD -t mangle -F CLASH || true
 # 目标地址为局域网或保留地址的流量跳过处理
-# 保留地址参考: https://zh.wikipedia.org/wiki/%E5%B7%B2%E5%88%86%E9%85%8D%E7%9A%84/8_IPv4%E5%9C%B0%E5%9D%80%E5%9D%97%E5%88%97%E8%A1%A8
 for element in ${NO_PROXY_IP[@]}
 do
     if [ "$element" == "" ]; then continue; fi
