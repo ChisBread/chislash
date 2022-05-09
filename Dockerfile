@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
     && apt-get clean \
     && apt-get update \
-    && apt-get install -y wget xz-utils iproute2 iptables python3 python3-yaml \
+    && apt-get install -y wget xz-utils iproute2 iptables python3 python3-yaml kmod \
     && rm -rf /var/lib/apt/lists/*
 ARG ARCH=amd64
 ARG CLASHVER=v1.10.6

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ex
+# set -eEx
 
 IP_CMD='ip'
 IPTABLES_CMD='iptables'
@@ -12,7 +12,10 @@ if [ "$1" == "ipv6" ]; then
     IP_STACK='ipv6'
     NO_PROXY_IP=(`ip a|grep inet6| awk '{print $2}'|grep -v -P '^(:|f)'` "::/128" "::1/128" "::ffff:0:0/96" "::ffff:0:0:0/96" "64:ff9b::/96" "100::/64" "2001::/32" "2001:20::/28" "2001:db8::/32" "2002::/16" "fc00::/7" "fe80::/10" "ff00::/8")
 fi
-
+if [ "`lsmod |grep nf_tproxy_$IP_STACK`" == "" ]; then
+    echo "tproxy is not supported"
+    exit 1
+fi
 # ENABLE ip forward
 if [ "$IP_STACK" == "ipv4" ]; then
     sysctl -w net.ipv4.ip_forward=1

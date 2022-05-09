@@ -1,5 +1,8 @@
 #!/bin/bash
-set -eEx
+set -eE
+echolog() {
+    echo -e "\033[32m[chislash log]\033[0m" $*
+}
 setroute() {
     /transparent_proxy/tproxy.start
     if [ "$IPV6_PROXY" == "1" ]; then
@@ -14,23 +17,24 @@ unsetroute() {
 }
 #清理
 _term() {
-    echo "Caught SIGTERM signal!"
-    echo "Tell the clash session to shut down."
+    echolog "Caught SIGTERM signal!"
+    echolog "Tell the clash session to shut down."
     pid=`cat /var/clash.pid` || true
     # terminate when the clash-daemon process dies
     __=`kill -9 ${pid} 2>&1 >/dev/null` || true
     tail --pid=${pid} -f /dev/null || true
     if [ "$IP_ROUTE" == "1" ]; then
-        echo "unset iproutes ..."
+        echolog "unset iproutes ..."
         __=`unsetroute 2>&1 >/dev/null` || true
-        echo "done."
+        echolog "done."
     fi
     mv /etc/clash/config.yaml.org /etc/clash/config.yaml || true
+    exit 0
 }
 trap _term SIGTERM SIGINT ERR
 # 初始化 /etc/clash
 if [ ! -f "/etc/clash/config.yaml" ]; then
-    echo "mixed-port: 7890" > /etc/clash/config.yaml
+    echolog "mixed-port: $CLASH_MIXED_PORT" > /etc/clash/config.yaml
 fi
 if [ ! -f "/etc/clash/Country.mmdb" ]; then
     cp -arp /default/clash/Country.mmdb /etc/clash/Country.mmdb
@@ -45,32 +49,29 @@ su - clash -c '/usr/bin/clash -d /etc/clash -ext-ctl '"0.0.0.0:$DASH_PORT"' -ext
 EXPID=$!
 while :
 do
-    set +eE
-    PID=`ps -def|grep -P '^clash'|awk '{print $2}'`
-    PORT_EXIST=`ss -tlnp| awk '{print $4}'|grep -P ".*:$CLASH_TPROXY_PORT"`
-    set -eE
+    PID=`ps -def|grep -P '^clash'|awk '{print $2}'` || true
+    PORT_EXIST=`ss -tlnp| awk '{print $4}'|grep -P ".*:$CLASH_TPROXY_PORT"` || true
     if [ "$PID" == "" ] || [ "$PORT_EXIST" == "" ]; then
-        EXPID_EXIST=$(ps aux | awk '{print $2}'| grep -w $EXPID)
+        EXPID_EXIST=$(ps aux | awk '{print $2}'| grep -w $EXPID) || true
         if [ ! $EXPID_EXIST ];then
             cat /etc/clash/clash.log
             exit 1
         fi
-        echo 'waiting for clash ...'
+        echolog 'waiting for clash ...'
         sleep 1
         continue
     fi
     echo $PID > /var/clash.pid
     break
 done
-cat /var/clash.pid
 if [ "$IP_ROUTE" == "1" ]; then
-    echo "set iproutes ..."
-    set +eEx
+    echolog "set iproutes ..."
+    set +eE
     __=`unsetroute 2>&1 >/dev/null`
-    set -eEx
+    set -eE
     __=`setroute 2>&1 >/dev/null`
-    echo "done."
+    echolog "done."
 fi
-echo "Dashboard Address: http://YOUR_IP:$DASH_PORT/ui"
+echolog "Dashboard Address: http://"`ip a | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' |head -n 1`":$DASH_PORT/ui"
 tail -f /etc/clash/clash.log &
 wait
