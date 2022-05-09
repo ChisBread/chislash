@@ -88,10 +88,8 @@ do
 done
 if [ "$IP_ROUTE" == "1" ]; then
     echolog "set iproutes ..."
-    set +eE
-    __=`unsetroute 2>&1 >/dev/null`
-    set -eE
-    __=`setroute 2>&1 >/dev/null`
+    __=`unsetroute 2>&1 >/dev/null` || true
+    __=`setroute 2>&1 >/dev/null` || true
     echolog "done."
 fi
 echolog "Dashboard Address: http://"`ip a | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' |head -n 1`":$DASH_PORT/ui"

@@ -16,8 +16,11 @@ if [ "$1" == "ipv6" ]; then
     "64:ff9b::/96" "100::/64" "2001::/32" "2001:20::/28" "2001:db8::/32" "2002::/16" "fc00::/7" "fe80::/10" "ff00::/8")
 fi
 if [ "`lsmod |grep nf_tproxy_$IP_STACK`" == "" ]; then
-    echo "tproxy is not supported"
-    exit 1
+    modprobe nf_tproxy_$IP_STACK
+    if [ "`lsmod |grep nf_tproxy_$IP_STACK`" == "" ]; then
+        echo "tproxy is not supported"
+        exit 1
+    fi
 fi
 # ENABLE ip forward
 if [ "$IP_STACK" == "ipv4" ]; then

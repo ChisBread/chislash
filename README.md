@@ -32,13 +32,18 @@ services:
       - MUST_CONFIG=<path(in container!!) to must.yaml> # optional 不能被覆盖的设置项, 最高优先级 (e.g. /etc/clash/must.yaml)
     volumes:
       - <path to config>:/etc/clash # required config.yaml的存放路径
+      - /dev:/dev                   # required 用于自动挂载驱动
+      - /lib/modules:/lib/modules   # required 用于自动挂载驱动
     network_mode: "host"            # required 如果开启IP_ROUTE, 则必须是host
     privileged: true                # required 如果开启IP_ROUTE, 则必须是true
     restart: unless-stopped
 ```
 - docker run (参考docker-compose)
 ```bash
-sudo docker run --privileged --network="host" --name chislash --restart unless-stopped -d \
+sudo docker run --privileged \
+    -v /dev:/dev \
+    -v /lib/modules:/lib/modules
+    --network="host" --name chislash --restart unless-stopped -d \
     -e CLASH_HTTP_PORT=7890 \
     -e CLASH_SOCKS_PORT=7891 \
     -e CLASH_TPROXY_PORT=7892 \
