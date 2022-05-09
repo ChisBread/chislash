@@ -47,9 +47,6 @@ _term() {
         __=`unsetroute 2>&1 >/dev/null` || true
         echolog "done."
     fi
-    if [ -f "/etc/clash/config.yaml.org" ] && [ "$BAK_AN_REC" == "1" ]; then
-        mv /etc/clash/config.yaml.org /etc/clash/config.yaml || true
-    fi
     pid=`cat /var/subconverter.pid` || true
     __=`kill -9 ${pid} 2>&1 >/dev/null` || true
     exit 0
@@ -64,10 +61,6 @@ if [ ! -d "/etc/clash/dashboard" ]; then
 fi
 if [ ! -d "/etc/clash/subconverter" ]; then
     cp -arp /default/subconverter /etc/clash/subconverter
-fi
-# 备份原始设置
-if [ -f "/etc/clash/config.yaml" ] && [ "$BAK_AN_REC" == "1" ]; then
-    cp /etc/clash/config.yaml /etc/clash/config.yaml.org || true
 fi
 # 启动订阅转换服务
 if [ "$ENABLE_SUBCONV" == "1" ]; then
