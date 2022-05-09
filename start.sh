@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -eE
 echolog() {
     echo -e "\033[32m[chislash log]\033[0m" $*
