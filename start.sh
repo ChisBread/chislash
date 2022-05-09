@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -eEx
 setroute() {
     /transparent_proxy/tproxy.start
     if [ "$IPV6_PROXY" == "1" ]; then
@@ -16,18 +16,18 @@ unsetroute() {
 _term() {
     echo "Caught SIGTERM signal!"
     echo "Tell the clash session to shut down."
-    pid=`cat /var/clash.pid`
+    pid=`cat /var/clash.pid` || true
     # terminate when the clash-daemon process dies
-    __=`kill -9 ${pid} 2>&1 >/dev/null`
-    tail --pid=${pid} -f /dev/null
+    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
+    tail --pid=${pid} -f /dev/null || true
     if [ "$IP_ROUTE" == "1" ]; then
         echo "unset iproutes ..."
-        __=`unsetroute 2>&1 >/dev/null`
+        __=`unsetroute 2>&1 >/dev/null` || true
         echo "done."
     fi
-    mv /etc/clash/config.yaml.org /etc/clash/config.yaml
+    mv /etc/clash/config.yaml.org /etc/clash/config.yaml || true
 }
-trap _term SIGTERM SIGINT
+trap _term SIGTERM SIGINT ERR
 # 初始化 /etc/clash
 if [ ! -f "/etc/clash/config.yaml" ]; then
     echo "mixed-port: 7890" > /etc/clash/config.yaml
@@ -45,10 +45,10 @@ su - clash -c '/usr/bin/clash -d /etc/clash -ext-ctl '"0.0.0.0:$DASH_PORT"' -ext
 EXPID=$!
 while :
 do
-    set +e
+    set +eE
     PID=`ps -def|grep -P '^clash'|awk '{print $2}'`
     PORT_EXIST=`ss -tlnp| awk '{print $4}'|grep -P ".*:$CLASH_TPROXY_PORT"`
-    set -e
+    set -eE
     if [ "$PID" == "" ] || [ "$PORT_EXIST" == "" ]; then
         EXPID_EXIST=$(ps aux | awk '{print $2}'| grep -w $EXPID)
         if [ ! $EXPID_EXIST ];then
@@ -65,9 +65,9 @@ done
 cat /var/clash.pid
 if [ "$IP_ROUTE" == "1" ]; then
     echo "set iproutes ..."
-    set +ex
+    set +eEx
     __=`unsetroute 2>&1 >/dev/null`
-    set -ex
+    set -eEx
     __=`setroute 2>&1 >/dev/null`
     echo "done."
 fi
