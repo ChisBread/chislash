@@ -2,9 +2,15 @@
 set -ex
 setroute() {
     /transparent_proxy/tproxy.start
+    if [ "$IPV6_PROXY" == "1" ]; then
+        /transparent_proxy/tproxy.start ipv6
+    fi
 }
 unsetroute() {
     /transparent_proxy/tproxy.stop
+    if [ "$IPV6_PROXY" == "1" ]; then
+        /transparent_proxy/tproxy.stop ipv6
+    fi
 }
 #清理
 _term() {

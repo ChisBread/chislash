@@ -22,6 +22,7 @@ services:
       - DASH_PORT=8080          # optional (default:8080) RESTful API端口(同时也是Web UI端口 e.g. http://IP:8080/ui)
       - IP_ROUTE=1              # optional (default:1) 开启透明代理
       - UDP_PROXY=1             # optional (default:1) 开启透明代理-UDP转发(当代理节点不支持UDP时,可关闭)
+      - IPV6_PROXY=0            # optional (default:1) 开启IPv6透明代理
       - LOG_LEVEL=info          # optional (default:info) 日志等级
       - MUST_CONFIG=<path(in container!!) to must.yaml> # optional 不能被覆盖的设置项 (e.g. /etc/clash/must.yaml)
     volumes:

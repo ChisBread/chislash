@@ -1,50 +1,66 @@
 #!/usr/bin/env bash
+set -x
 
-# set -ex
+IP_CMD='ip'
+IPTABLES_CMD='iptables'
+IP_STACK='ipv4'
+# 第一个参数决定IPv4/IPv6
+if [ "$1" == "ipv6" ]; then
+    IP_CMD='ip -6'
+    IPTABLES_CMD='ip6tables'
+    IP_STACK='ipv6'
+fi
 
-ip rule del fwmark 666 table 666 || true
-ip route del local 0.0.0.0/0 dev lo table 666 || true
+$IP_CMD rule del fwmark $PROXY_FWMARK table $PROXY_ROUTE_TABLE || true
+if [ "$IP_STACK" == "ipv4" ]; then
+    $IP_CMD route del local 0.0.0.0/0 dev lo table $PROXY_ROUTE_TABLE || true
+fi
+if [ "$IP_STACK" == "ipv6" ]; then
+    $IP_CMD route del local ::/0 dev lo table $PROXY_ROUTE_TABLE
+fi
 
 ################ 清理DNS规则 ##################
 while :
 do
-    iptables -t nat -D PREROUTING -p udp -j CLASH_DNS_EXTERNAL
+    $IPTABLES_CMD -t nat -D PREROUTING -p udp -j CLASH_DNS_EXTERNAL
     if [ "$?" == "0" ]; then continue; fi
-    iptables -t nat -D OUTPUT -p udp -j CLASH_DNS_LOCAL
+    $IPTABLES_CMD -t nat -D OUTPUT -p udp -j CLASH_DNS_LOCAL
     if [ "$?" == "0" ]; then continue; fi
-    iptables -t nat -D CLASH_DNS_EXTERNAL -p tcp --dport 53 -j REDIRECT --to-ports 1053
+    $IPTABLES_CMD -t nat -D CLASH_DNS_EXTERNAL -p tcp --dport 53 -j REDIRECT --to-ports 1053
     if [ "$?" == "0" ]; then continue; fi
-    iptables -t nat -D CLASH_DNS_EXTERNAL -p udp --dport 53 -j REDIRECT --to-ports 1053
+    $IPTABLES_CMD -t nat -D CLASH_DNS_EXTERNAL -p udp --dport 53 -j REDIRECT --to-ports 1053
     if [ "$?" == "0" ]; then continue; fi
-    iptables -t nat -D CLASH_DNS_LOCAL -m owner --uid-owner clash -j RETURN
+    $IPTABLES_CMD -t nat -D CLASH_DNS_LOCAL -m owner --uid-owner clash -j RETURN
     if [ "$?" == "0" ]; then continue; fi
-    iptables -t nat -D CLASH_DNS_LOCAL -p tcp --dport 53 -j REDIRECT --to-ports 1053
+    $IPTABLES_CMD -t nat -D CLASH_DNS_LOCAL -p tcp --dport 53 -j REDIRECT --to-ports 1053
     if [ "$?" == "0" ]; then continue; fi
-    iptables -t nat -D CLASH_DNS_LOCAL -p udp --dport 53 -j REDIRECT --to-ports 1053
+    $IPTABLES_CMD -t nat -D CLASH_DNS_LOCAL -p udp --dport 53 -j REDIRECT --to-ports 1053
     if [ "$?" == "0" ]; then continue; fi
 break;
 done
-iptables -t nat -F CLASH_DNS_EXTERNAL
-iptables -t nat -F CLASH_DNS_LOCAL
-iptables -t nat -X CLASH_DNS_EXTERNAL || true
-iptables -t nat -X CLASH_DNS_LOCAL || true
+$IPTABLES_CMD -t nat -F CLASH_DNS_EXTERNAL
+$IPTABLES_CMD -t nat -F CLASH_DNS_LOCAL
+$IPTABLES_CMD -t nat -X CLASH_DNS_EXTERNAL || true
+$IPTABLES_CMD -t nat -X CLASH_DNS_LOCAL || true
 
 ################ 清理TPROXY规则 ##################
 while :
 do
-    iptables -t nat -D PREROUTING -p icmp -d 198.18.0.0/16 -j DNAT --to-destination 127.0.0.1
+    if [ "$IP_STACK" == "ipv4" ]; then
+        $IPTABLES_CMD -t nat -D PREROUTING -p icmp -d 198.18.0.0/16 -j DNAT --to-destination 127.0.0.1
+        if [ "$?" == "0" ]; then continue; fi
+    fi
+    $IPTABLES_CMD -t mangle -D OUTPUT -j CLASH_LOCAL
     if [ "$?" == "0" ]; then continue; fi
-    iptables -t mangle -D OUTPUT -j CLASH_LOCAL
+    $IPTABLES_CMD -t mangle -D OUTPUT -p tcp -m owner --uid-owner clash -j RETURN
     if [ "$?" == "0" ]; then continue; fi
-    iptables -t mangle -D OUTPUT -p tcp -m owner --uid-owner clash -j RETURN
+    $IPTABLES_CMD -t mangle -D OUTPUT -p udp -m owner --uid-owner clash -j RETURN
     if [ "$?" == "0" ]; then continue; fi
-    iptables -t mangle -D OUTPUT -p udp -m owner --uid-owner clash -j RETURN
-    if [ "$?" == "0" ]; then continue; fi
-    iptables -t mangle -D PREROUTING -j CLASH
+    $IPTABLES_CMD -t mangle -D PREROUTING -j CLASH
     if [ "$?" == "0" ]; then continue; fi
     break;
 done
-iptables -t mangle -F CLASH
-iptables -t mangle -F CLASH_LOCAL
-iptables -t mangle -X CLASH || true
-iptables -t mangle -X CLASH_LOCAL || true
+$IPTABLES_CMD -t mangle -F CLASH
+$IPTABLES_CMD -t mangle -F CLASH_LOCAL
+$IPTABLES_CMD -t mangle -X CLASH || true
+$IPTABLES_CMD -t mangle -X CLASH_LOCAL || true
