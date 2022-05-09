@@ -28,6 +28,7 @@ services:
       - ENABLE_SUBCONV=1        # optional (default:1) 开启本地订阅转换服务, 指定SUBSCR_URLS, 且没有外部订阅转换服务时, 需要为1
       - SUBCONV_URL=http://127.0.0.1:25500/sub          # optional (default:"http://127.0.0.1:25500/sub") 订阅转换服务地址
       - SUBSCR_URLS=<URLs split by '|'>                 # optional 订阅的节点链接, 用'|'分隔, 会覆盖原有的config.yaml
+      - SUBSCR_EXPR=6000                                # optional (default:6000) 订阅过期时间(秒), 下次启动如果过期, 会重新订阅
       - REMOTE_CONV_RULE=<URL of remote rule>           # optional (default:ACL4SSR的规则链接)订阅转换规则
       - MUST_CONFIG=<path(in container!!) to must.yaml> # optional 不能被覆盖的设置项, 最高优先级 (e.g. /etc/clash/must.yaml)
     volumes:
@@ -42,7 +43,7 @@ services:
 ```bash
 sudo docker run --privileged \
     -v /dev:/dev \
-    -v /lib/modules:/lib/modules
+    -v /lib/modules:/lib/modules \
     --network="host" --name chislash --restart unless-stopped -d \
     -e CLASH_HTTP_PORT=7890 \
     -e CLASH_SOCKS_PORT=7891 \
