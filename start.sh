@@ -67,7 +67,7 @@ fi
 if [ ! -d "/etc/clash/subconverter" ]; then
     cp -arp /default/subconverter /etc/clash/subconverter
 fi
-chmod -R a+rwx /etc/clash
+chmod -R a+rw /etc/clash
 # 启动订阅转换服务
 if [ "$ENABLE_SUBCONV" == "1" ]; then
     echolog "启动订阅转换服务..."
@@ -146,5 +146,5 @@ if [ "$IP_ROUTE" == "1" ]; then
     echolog "done."
 fi
 echolog "Dashboard Address: http://"`ip a | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' |head -n 1`":$DASH_PORT/ui"
-nohup tail -f /etc/clash/clash.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {} &
+nohup tail -f /etc/clash/clash.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {}  2>&1 &
 wait
