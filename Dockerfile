@@ -33,7 +33,7 @@ RUN echo 'detect arch ...' \
     && gunzip subconverter_$SC_ARCH.tar.gz && tar xvf subconverter_$SC_ARCH.tar && rm subconverter_$SC_ARCH.tar \
     && mv subconverter /default/ \
     && chmod -R a+r /default/
-ENV MUST_CONFIG=""
+ENV REQUIRED_CONFIG=""
 ENV CLASH_HTTP_PORT=7890
 ENV CLASH_SOCKS_PORT=7891
 ENV CLASH_TPROXY_PORT=7892

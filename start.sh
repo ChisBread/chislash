@@ -3,6 +3,11 @@ set -eE
 echolog() {
     echo -e "\033[32m[chislash log]\033[0m" $*
 }
+export -f echolog
+echoerr() {
+    echo -e "\033[31m[chislash log]\033[0m" $*
+}
+export -f echoerr
 setroute() {
     /transparent_proxy/tproxy.start
     if [ "$IPV6_PROXY" == "1" ]; then
@@ -64,8 +69,18 @@ if [ ! -d "/etc/clash/subconverter" ]; then
 fi
 # 启动订阅转换服务
 if [ "$ENABLE_SUBCONV" == "1" ]; then
+    echolog "启动订阅转换服务..."
     nohup /etc/clash/subconverter/subconverter >/etc/clash/subconverter.log 2>&1 &
     echo $! > /var/subconverter.pid
+    while :
+    do
+        startup="`grep 'Startup completed.' /etc/clash/subconverter.log`" || true
+        if [ "$startup" != "" ]; then
+            echolog "订阅转换服务就绪"
+            echolog $startup
+            break
+        fi
+    done
 fi
 # 转换订阅
 if [ "$SUBSCR_URLS" != "" ]; then
@@ -74,10 +89,9 @@ if [ "$SUBSCR_URLS" != "" ]; then
         echolog "订阅已过期 重新订阅中..."
         # 如果依赖本地订阅, 但没有启动服务;
         if [ "`echo "$SUBSCR_URLS" |grep 'http://127.0.0.1:25500/sub'`" != "" ] && [ "$ENABLE_SUBCONV" != "1" ]; then
-                echolog "依赖本地订阅服务, 请设置ENABLE_SUBCONV=1"
+                echoerr "依赖本地订阅服务, 请设置ENABLE_SUBCONV=1"
                 exit 1
         fi
-        sleep 2
         curl --get \
             --data-urlencode "target=clash" \
             --data-urlencode "url=$SUBSCR_URLS" \
@@ -88,7 +102,15 @@ if [ "$SUBSCR_URLS" != "" ]; then
         echolog "订阅有效 ${SINCE} 秒后重新订阅"
     fi
 fi
-python3 /default/clash/utils/override.py "/etc/clash/config.yaml" "$MUST_CONFIG" "$CLASH_HTTP_PORT" "$CLASH_SOCKS_PORT" "$CLASH_TPROXY_PORT" "$CLASH_MIXED_PORT" "$LOG_LEVEL"
+python3 /default/clash/utils/override.py \
+    "/etc/clash/config.yaml" \
+    "$REQUIRED_CONFIG" \
+    "$CLASH_HTTP_PORT" \
+    "$CLASH_SOCKS_PORT" \
+    "$CLASH_TPROXY_PORT" \
+    "$CLASH_MIXED_PORT" \
+    "$LOG_LEVEL" \
+    "$IPV6_PROXY"
 chmod -R a+rw /etc/clash
 su - clash -c '/usr/bin/clash -d /etc/clash -ext-ctl '"0.0.0.0:$DASH_PORT"' -ext-ui /etc/clash/dashboard/public'  >/etc/clash/clash.log 2>&1 &
 EXPID=$!
@@ -99,6 +121,7 @@ do
     if [ "$PID" == "" ] || [ "$PORT_EXIST" == "" ]; then
         EXPID_EXIST=$(ps aux | awk '{print $2}'| grep -w $EXPID) || true
         if [ ! $EXPID_EXIST ];then
+            echoerr "clash is not running"
             cat /etc/clash/clash.log
             exit 1
         fi
@@ -113,13 +136,15 @@ if [ "$IP_ROUTE" == "1" ]; then
     echolog "set iproutes ..."
     __=`unsetroute >/dev/null 2>&1` || true
     touch /tmp/setroute.log
-    __=`setroute >/tmp/setroute.log 2>&1` || true
+    __=`setroute >/tmp/setroute.log 2>/tmp/setroute.err` || true
+    cat /tmp/setroute.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {}
+    cat /tmp/setroute.err | xargs -n 1 -P 10 -I {} bash -c 'echoerr "$@"' _ {}
     if [ "`cat /tmp/setroute.log|grep "tproxy is not supported" `" ]; then
-        echolog "tproxy is not supported"
+        echoerr "tproxy is not supported"
         exit 1
     fi
     echolog "done."
 fi
 echolog "Dashboard Address: http://"`ip a | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' |head -n 1`":$DASH_PORT/ui"
-tail -f /etc/clash/clash.log &
+nohup tail -f /etc/clash/clash.log &
 wait

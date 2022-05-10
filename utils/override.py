@@ -12,6 +12,7 @@ mixed-port: %s
 bind-address: '*'
 allow-lan: true
 log-level: %s
+ipv6: %s
 dns:
   enable: true
   listen: 0.0.0.0:1053
@@ -44,7 +45,7 @@ def deep_update(source, overrides):
             source[key] = overrides[key]
     return source
 
-def override(user_config, must_config, ext):
+def override(user_config, required_config, ext):
     user = yaml.load(open(user_config, 'r', encoding="utf-8").read(), Loader=yaml.FullLoader)
     for dnskey in ['default-nameserver', 'nameserver', 'fallback']:
       if 'dns' in user and dnskey in user['dns'] and user['dns'][dnskey]:
@@ -52,13 +53,22 @@ def override(user_config, must_config, ext):
         del ed[dnskey]
         ext['dns'] = ed
     deep_update(user, ext)
-    if must_config:
-      must = yaml.load(open(must_config, 'r', encoding="utf-8").read(), Loader=yaml.FullLoader)
+    if required_config:
+      must = yaml.load(open(required_config, 'r', encoding="utf-8").read(), Loader=yaml.FullLoader)
       deep_update(user, must)
     user_file = open(user_config, 'w', encoding="utf-8")
     yaml.dump(user, user_file)
     user_file.close()
 
-_,user_config,must_config,port,socks_port,tproxy_port,mixed_port,log_level = sys.argv
-override(user_config, must_config, yaml.load(ext_template%(port,socks_port,tproxy_port,mixed_port,log_level), Loader=yaml.FullLoader))
+_,user_config,required_config,port,socks_port,tproxy_port,mixed_port,log_level,ipv6_proxy = sys.argv
+override(
+  user_config, required_config,
+  yaml.load(ext_template%(
+    port,
+    socks_port,
+    tproxy_port,
+    mixed_port,
+    log_level,
+    ipv6_proxy=="1",
+    ), Loader=yaml.FullLoader))
 
