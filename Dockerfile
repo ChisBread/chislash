@@ -42,6 +42,7 @@ ENV CLASH_SOCKS_PORT=7891
 ENV CLASH_TPROXY_PORT=7892
 ENV CLASH_MIXED_PORT=7893
 ENV DASH_PORT=8080
+ENV DASH_PATH="/etc/clash/dashboard/public"
 ENV IP_ROUTE=1
 ENV UDP_PROXY=1
 ENV IPV6_PROXY=1
@@ -56,6 +57,7 @@ ENV SUBSCR_EXPR=6000
 ENV REMOTE_CONV_RULE="http://127.0.0.1:8091/ACL4SSR/Clash/config/ACL4SSR_Online_Full.ini"
 ENV EXPORT_DIR_PORT=8091
 ENV EXPORT_DIR_BIND='0.0.0.0'
+ENV NO_ENGLISH=true
 
 EXPOSE $CLASH_HTTP_PORT $CLASH_SOCKS_PORT $CLASH_TPROXY_PORT $CLASH_MIXED_PORT $DASH_PORT $SUBCONV_PORT
 VOLUME /etc/clash
@@ -63,5 +65,5 @@ COPY start.sh /
 COPY transparent_proxy /transparent_proxy
 COPY utils /default/clash/utils
 RUN chmod +x /transparent_proxy/*
-RUN useradd -g root -s /bin/bash -u 1086 -m clash && setcap 'cap_net_admin,cap_net_bind_service,cap_net_raw=+ep' /usr/bin/clash
+RUN useradd -g root -s /bin/bash -u 1086 -m clash
 ENTRYPOINT [ "/start.sh" ]

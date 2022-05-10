@@ -54,13 +54,17 @@ services:
   chislash:
     image: chisbread/chislash
     container_name: chislash
+    # 以下样例中的 "/etc/clash/" 代表容器内目录
     environment:
       - TZ=Asia/Shanghai       # optional
+      - REQUIRED_CONFIG=<path to required.yaml> # optional 
+      # REQUIRED_CONFIG: 不能被覆盖的设置项, 最高优先级 (e.g. /etc/clash/required.yaml)
       - CLASH_HTTP_PORT=7890   # optional (default:7890)
       - CLASH_SOCKS_PORT=7891  # optional (default:7891)
       - CLASH_TPROXY_PORT=7892 # optional (default:7892)
       - CLASH_MIXED_PORT=7893  # optional (default:7893)
       - DASH_PORT=8080         # optional (default:8080) RESTful API端口(对应WebUI http://IP:8080/ui)
+      - DASH_PATH=<path to ui> # optional (default:"/etc/clash/dashboard/public")
       - IP_ROUTE=1             # optional (default:1) 开启透明代理(本机透明代理/作为旁路网关)
       - UDP_PROXY=1            # optional (default:1) 开启透明代理-UDP转发(需要节点支持)
       - IPV6_PROXY=1           # optional (default:1) 开启IPv6透明代理
@@ -69,12 +73,12 @@ services:
       - SUBCONV_URL=http://127.0.0.1:25500/sub  # optional (default:"http://127.0.0.1:25500/sub") 订阅转换服务地址
       - SUBSCR_URLS=<URLs split by '|'>         # optional 订阅的节点链接, 多个链接用'|'分隔, 会覆盖原有的config.yaml
       - SUBSCR_EXPR=86400                       # optional (default:86400) 订阅过期时间(秒), 下次启动如果过期, 会重新订阅
-      - REMOTE_CONV_RULE=<URL of remote rule>   # optional (default:ACL4SSR的ini规则链接) 订阅转换规则
+      - REMOTE_CONV_RULE=<URL of remote rule>   # optional (default:⬇️) 订阅转换规则
       # REMOTE_CONV_RULE: 默认使用内部服务提供的链接 "http://127.0.0.1:8091/ACL4SSR/Clash/config/ACL4SSR_Online_Full.ini"
       # 在浏览器打开 http://< 服务器IP >:8091/ACL4SSR/Clash/config/ 即可查看内部服务支持的规则列表
-      - REQUIRED_CONFIG=<path to required.yaml> # optional 不能被覆盖的设置项, 最高优先级 (e.g. /etc/clash/required.yaml)
-      - EXPORT_DIR_BIND='0.0.0.0'
       - EXPORT_DIR_PORT=8091
+      - EXPORT_DIR_BIND='0.0.0.0'
+      - NO_ENGLISH=true        # optional (default:false) 提醒自己这玩意主要是国人用
     volumes:
       - <path to config>:/etc/clash # required config.yaml的存放路径
       - /dev:/dev                   # optional 用于自动挂载TPROXY模块
