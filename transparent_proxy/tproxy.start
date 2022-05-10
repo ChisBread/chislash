@@ -25,10 +25,10 @@ if [ "`lsmod |grep nf_tproxy_$IP_STACK`" == "" ]; then
 fi
 # ENABLE ip forward
 if [ "$IP_STACK" == "ipv4" ]; then
-    sysctl -w net.ipv4.ip_forward=1
+    sysctl -w net.ipv4.ip_forward=1 >/dev/null 2>&1
 fi
 if [ "$IP_STACK" == "ipv6" ]; then
-    sysctl -w net.ipv6.conf.all.forwarding=1
+    sysctl -w net.ipv6.conf.all.forwarding=1 >/dev/null 2>&1
 fi
 # ROUTE RULES
 $IP_CMD rule add fwmark $PROXY_FWMARK lookup $PROXY_ROUTE_TABLE
@@ -87,7 +87,7 @@ $IPTABLES_CMD -t mangle -A OUTPUT -j CLASH_LOCAL
 # 这并不能保证 ping 结果有效(CLASH 等不支持转发 ICMP), 只是让它有返回结果而已
 # --to-destination 设置为一个可达的地址即可
 if [ "$IP_STACK" == "ipv4" ]; then
-    sysctl -w net.$IP_STACK.conf.all.route_localnet=1
+    sysctl -w net.$IP_STACK.conf.all.route_localnet=1 >/dev/null 2>&1
     $IPTABLES_CMD -t nat -A PREROUTING -p icmp -d 198.18.0.0/16 -j DNAT --to-destination 127.0.0.1
 fi
 
