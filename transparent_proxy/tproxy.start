@@ -16,6 +16,7 @@ if [ "$1" == "ipv6" ]; then
     "64:ff9b::/96" "100::/64" "2001::/32" "2001:20::/28" "2001:db8::/32" "2002::/16" "fc00::/7" "fe80::/10" "ff00::/8")
 fi
 if [ "`lsmod |grep nf_tproxy_$IP_STACK`" == "" ]; then
+    modprobe xt_TPROXY
     modprobe nf_tproxy_$IP_STACK
     if [ "`lsmod |grep nf_tproxy_$IP_STACK`" == "" ]; then
         echo "tproxy is not supported"
@@ -37,6 +38,7 @@ fi
 if [ "$IP_STACK" == "ipv6" ]; then
     $IP_CMD route add local ::/0 dev lo table $PROXY_ROUTE_TABLE
 fi
+######################## 转发流量设置 ########################
 # CLASH 链负责处理转发流量 
 $IPTABLES_CMD -t mangle -N CLASH || true
 $IPTABLES_CMD -t mangle -F CLASH || true
@@ -53,6 +55,9 @@ if [ "$UDP_PROXY" == "1" ]; then
     $IPTABLES_CMD -t mangle -A CLASH -p udp -j TPROXY --on-port $CLASH_TPROXY_PORT --tproxy-mark $PROXY_FWMARK
 fi
 
+# 最后让所有流量通过 CLASH 链进行处理
+$IPTABLES_CMD -t mangle -A PREROUTING -j CLASH
+######################## 本机流量设置 ########################
 # CLASH_LOCAL 链负责处理网关本身发出的流量
 $IPTABLES_CMD -t mangle -N CLASH_LOCAL || true
 $IPTABLES_CMD -t mangle -F CLASH_LOCAL || true
@@ -86,7 +91,7 @@ if [ "$IP_STACK" == "ipv4" ]; then
     $IPTABLES_CMD -t nat -A PREROUTING -p icmp -d 198.18.0.0/16 -j DNAT --to-destination 127.0.0.1
 fi
 
-#################### DNS #########################
+######################## DNS流量设置 ########################
 
 # 转发所有 DNS 查询到 1053 端口
 # 此操作会导致所有 DNS 请求全部返回虚假 IP(fake ip 198.18.0.1/16)
@@ -108,6 +113,3 @@ $IPTABLES_CMD -t nat -A CLASH_DNS_EXTERNAL -p tcp --dport 53 -j REDIRECT --to-po
 
 $IPTABLES_CMD -t nat -I OUTPUT -p udp -j CLASH_DNS_LOCAL
 $IPTABLES_CMD -t nat -I PREROUTING -p udp -j CLASH_DNS_EXTERNAL
-
-# 最后让所有流量通过 CLASH 链进行处理
-$IPTABLES_CMD -t mangle -A PREROUTING -j CLASH
