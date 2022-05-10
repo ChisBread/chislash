@@ -77,7 +77,7 @@ if [ "$ENABLE_SUBCONV" == "1" ]; then
         startup="`grep 'Startup completed.' /etc/clash/subconverter.log`" || true
         if [ "$startup" != "" ]; then
             echolog "订阅转换服务就绪"
-            echolog $startup
+            echo $startup
             break
         fi
     done
