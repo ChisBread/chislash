@@ -4,6 +4,19 @@
 ## 警告
 - 十分**不建议**在云服务器(甲骨文,AWS...)上使用透明代理特性(IP_ROUTE=1)！ 任何意外情况都可能导致你的服务器失联
 - 如果依然要使用,请关闭透明代理特性,作为HTTP/SOCKS5代理服务器使用; 参考[其它场景](#其它场景)中的"非透明代理"
+## 环境检查
+- 检查是否支持TProxy(支持TProxy, 才能使用透明代理)
+```
+lsmod | grep xt_TPROXY
+```
+- 如果没有返回,则需要加载
+```
+modprobe xt_TPROXY
+``` 
+- 如果没有报错,设置自动加载xt_TPROXY
+```
+sudo bash -c "echo 'xt_TPROXY' >/etc/modules-load.d/TPROXY.conf"
+```
 ## 快速上手
 - 将Linux服务器(树莓派,工控机,闲置电脑)作为透明代理
 - 一行搞定

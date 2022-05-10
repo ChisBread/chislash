@@ -20,6 +20,8 @@ _term() {
     fi
     pid=`cat /var/subconverter.pid` || true
     __=`kill -9 ${pid} 2>&1 >/dev/null` || true
+    pid=`cat /var/rulesexporter.pid` || true
+    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
     exit 0
 }
 trap _term SIGTERM SIGINT ERR
@@ -215,7 +217,7 @@ if [ "$IP_ROUTE" == "1" ]; then
     cat /tmp/setroute.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "[setroute] $@"' _ {}
     cat /tmp/setroute.err | xargs -n 1 -P 10 -I {} bash -c 'echoerr "[setroute] $@"' _ {}
     if [ "`cat /tmp/setroute.log|grep "tproxy is not supported" `" ]; then
-        echoerr "系统可能不支持TProxy, 无法设置透明代理"
+        echoerr "当前不支持TProxy! 自动加载xt_TPROXY失败, 请尝试手动执行: 'modprobe xt_TPROXY'"
         $NO_ENGLISH || echoerr "TProxy is not supported"
         exit 1
     fi

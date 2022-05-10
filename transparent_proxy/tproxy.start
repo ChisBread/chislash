@@ -15,10 +15,10 @@ if [ "$1" == "ipv6" ]; then
     NO_PROXY_IP=(`ip a|grep inet6| awk '{print $2}'|grep -v -P '^(:|f)'` "::/128" "::1/128" "::ffff:0:0/96" "::ffff:0:0:0/96" \
     "64:ff9b::/96" "100::/64" "2001::/32" "2001:20::/28" "2001:db8::/32" "2002::/16" "fc00::/7" "fe80::/10" "ff00::/8")
 fi
-if [ "`lsmod |grep nf_tproxy_$IP_STACK`" == "" ]; then
-    modprobe xt_TPROXY
-    modprobe nf_tproxy_$IP_STACK
-    if [ "`lsmod |grep nf_tproxy_$IP_STACK`" == "" ]; then
+if [ "`lsmod |grep xt_TPROXY`" == "" ]; then
+    # 如果宿主机与内核不兼容, 或者宿主机不支持TProxy, 则会失败
+    __=`modprobe xt_TPROXY >/dev/null 2>&1`
+    if [ "`lsmod |grep xt_TPROXY`" == "" ]; then
         echo "tproxy is not supported"
         exit 1
     fi
