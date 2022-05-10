@@ -71,10 +71,9 @@ services:
       - SUBSCR_EXPR=86400                       # optional (default:86400) 订阅过期时间(秒), 下次启动如果过期, 会重新订阅
       - REMOTE_CONV_RULE=<URL of remote rule>   # optional (default:ACL4SSR的ini规则链接) 订阅转换规则
       # REMOTE_CONV_RULE: 默认使用内部服务提供的链接 "http://127.0.0.1:8091/ACL4SSR/Clash/config/ACL4SSR_Online_Full.ini"
-      # 如果想查看内部服务支持的规则列表, 将EXPORT_DIR_BIND设为 0.0.0.0
-      # 再在浏览器打开 http://< 服务器IP >:8091/ACL4SSR/Clash/config/ 即可
+      # 在浏览器打开 http://< 服务器IP >:8091/ACL4SSR/Clash/config/ 即可查看内部服务支持的规则列表
       - REQUIRED_CONFIG=<path to required.yaml> # optional 不能被覆盖的设置项, 最高优先级 (e.g. /etc/clash/required.yaml)
-      - EXPORT_DIR_BIND='127.0.0.1'
+      - EXPORT_DIR_BIND='0.0.0.0'
       - EXPORT_DIR_PORT=8091
     volumes:
       - <path to config>:/etc/clash # required config.yaml的存放路径
