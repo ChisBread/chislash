@@ -1,10 +1,10 @@
 # chislash
 - 开箱即用的clash透明网关
 
-# 警告
+## 警告
 - 十分**不建议**在云服务器(甲骨文,AWS...)上使用透明代理特性(IP_ROUTE=1)！ 任何意外情况都可能导致你的服务器失联
 
-# 快速上手
+## 快速上手
 - 将Linux服务器(树莓派,工控机,闲置电脑)作为透明代理
 - 一行搞定
 ```bash
@@ -28,10 +28,25 @@ sudo docker run --name chislash \
 - 控制台
   - **http://< 服务器IP >:8080/ui**  为clash的WebUI, 用于切换节点
   - **http://< 服务器IP >:25500** 为subconverter后端服务地址, 用于节点订阅转换
-# 进阶使用
+## 其它场景
+- 非透明代理
+```bash
+sudo docker run --name chislash \
+    --rm -it \
+    --privileged \
+    -e IP_ROUTE=0 \
+    -e SUBSCR_URLS=<填上你的节点订阅链接或代理节点的分享链接, 多个用'|'分隔> \
+    -v $HOME/.config/chislash:/etc/clash \
+    -p 7890:7890 -p 7891:7891 \
+    -p 8080:8080 -p 25500:25500 \
+    chisbread/chislash:latest
+```
+- 关闭IPv6代理: *-e IPV6_PROXY=0*
+- 关闭UDP代理: *-e UDP_PROXY=0*
+## 进阶使用
 - 一些细节
-  - 透明代理: 容器自动映射路由表，劫持本地DNS流量实现本地透明代理; 亦可作为网关使用, 需要指定DNS为网关IP
-  - 配置文件: 容器会修改部分用户配置来统一端口和部分高级配置(关闭容器后会恢复), utils/override.py中定义了本镜像修改用户配置的方式
+  - 透明代理: 容器自动映射路由表, 劫持本地DNS流量实现本地透明代理; 亦可作为网关使用, 需要将网关和DNS指定为服务器IP
+  - 配置文件: 请注意备份配置文件, 容器会修改部分用户配置来统一端口和部分高级配置, utils/override.py中定义了本镜像修改用户配置的方式
 - docker-compose
 ```yaml
 version: "3.4"
@@ -48,7 +63,7 @@ services:
       - DASH_PORT=8080         # optional (default:8080) RESTful API端口(对应WebUI http://IP:8080/ui)
       - IP_ROUTE=1             # optional (default:1) 开启透明代理(本机透明代理/作为旁路网关)
       - UDP_PROXY=1            # optional (default:1) 开启透明代理-UDP转发(需要节点支持)
-      - IPV6_PROXY=0           # optional (default:1) 开启IPv6透明代理
+      - IPV6_PROXY=1           # optional (default:1) 开启IPv6透明代理
       - LOG_LEVEL=info         # optional (default:info) 日志等级
       - ENABLE_SUBCONV=1       # optional (default:1) 开启本地订阅转换服务, 指定SUBSCR_URLS, 且没有外部订阅转换服务时, 需要为1
       - SUBCONV_URL=http://127.0.0.1:25500/sub  # optional (default:"http://127.0.0.1:25500/sub") 订阅转换服务地址
@@ -66,16 +81,16 @@ services:
 ```
 - docker run (参考docker-compose)
 
-# 支持情况
+## 支持情况
 
 | OS   | 透明代理/网关(Transparent Gateway) | 服务端(HTTP/SOCKS5 Proxy Server)  |
 | -------------  |  ------------- |  ------------- |
 | Linux (with tproxy module) | ✅  | ✅  |
 | Linux (without tproxy module)  | ❎ | ✅  |
-| Windows   | ❎ | ✅  |
-| macOS   | ❎ | ✅  |
+| Windows   | ❓ | ❓ |
+| macOS   | ❓ | ❓ |
 
-# 感谢
+## 感谢
 - https://github.com/Dreamacro/clash
 - https://github.com/haishanh/yacd
 - https://github.com/tindy2013/subconverter

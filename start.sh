@@ -67,6 +67,7 @@ fi
 if [ ! -d "/etc/clash/subconverter" ]; then
     cp -arp /default/subconverter /etc/clash/subconverter
 fi
+chmod -R a+rwx /etc/clash
 # 启动订阅转换服务
 if [ "$ENABLE_SUBCONV" == "1" ]; then
     echolog "启动订阅转换服务..."
@@ -111,7 +112,6 @@ python3 /default/clash/utils/override.py \
     "$CLASH_MIXED_PORT" \
     "$LOG_LEVEL" \
     "$IPV6_PROXY"
-chmod -R a+rw /etc/clash
 su - clash -c '/usr/bin/clash -d /etc/clash -ext-ctl '"0.0.0.0:$DASH_PORT"' -ext-ui /etc/clash/dashboard/public'  >/etc/clash/clash.log 2>&1 &
 EXPID=$!
 while :
