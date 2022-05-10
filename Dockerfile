@@ -32,6 +32,9 @@ RUN echo 'detect arch ...' \
     && wget https://github.com/tindy2013/subconverter/releases/download/$SCVER/subconverter_$SC_ARCH.tar.gz \
     && gunzip subconverter_$SC_ARCH.tar.gz && tar xvf subconverter_$SC_ARCH.tar && rm subconverter_$SC_ARCH.tar \
     && mv subconverter /default/ \
+    && wget https://github.com/ACL4SSR/ACL4SSR/archive/refs/heads/master.tar.gz \
+    && gunzip master.tar.gz && tar xvf master.tar && rm master.tar \
+    && mkdir /default/exports && mv ACL4SSR-master /default/exports/ACL4SSR \
     && chmod -R a+r /default/
 ENV REQUIRED_CONFIG=""
 ENV CLASH_HTTP_PORT=7890
@@ -50,7 +53,9 @@ ENV ENABLE_SUBCONV=1
 ENV SUBCONV_URL="http://127.0.0.1:25500/sub"
 ENV SUBSCR_URLS=""
 ENV SUBSCR_EXPR=6000
-ENV REMOTE_CONV_RULE="https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_Full.ini"
+ENV REMOTE_CONV_RULE="http://127.0.0.1:8091/ACL4SSR/Clash/config/ACL4SSR_Online_Full.ini"
+ENV EXPORT_DIR_PORT=8091
+ENV EXPORT_DIR_BIND='127.0.0.1'
 
 EXPOSE $CLASH_HTTP_PORT $CLASH_SOCKS_PORT $CLASH_TPROXY_PORT $CLASH_MIXED_PORT $DASH_PORT $SUBCONV_PORT
 VOLUME /etc/clash

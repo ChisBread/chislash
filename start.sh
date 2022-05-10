@@ -1,4 +1,28 @@
 #!/usr/bin/env bash
+# line buffer
+if [ yes != "$STDBUF" ]; then
+    # exec 信号量捕获使能
+    STDBUF=yes exec /usr/bin/stdbuf -oL -eL "$0"
+    exit $?
+fi
+# cleanup iptables
+_term() {
+    echolog "Caught SIGTERM signal!"
+    echolog "Tell the clash session to shut down."
+    pid=`cat /var/clash.pid` || true
+    # terminate when the clash-daemon process dies
+    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
+    tail --pid=${pid} -f /dev/null || true
+    if [ "$IP_ROUTE" == "1" ]; then
+        echolog "unset iproutes ..."
+        __=`unsetroute 2>&1 >/dev/null` || true
+        echolog "done."
+    fi
+    pid=`cat /var/subconverter.pid` || true
+    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
+    exit 0
+}
+trap _term SIGTERM SIGINT ERR
 set -eE
 echolog() {
     echo -e "\033[32m[chislash log]\033[0m" $*
@@ -39,24 +63,6 @@ file_expired() {
     fi
     exit 0
 }
-#清理
-_term() {
-    echolog "Caught SIGTERM signal!"
-    echolog "Tell the clash session to shut down."
-    pid=`cat /var/clash.pid` || true
-    # terminate when the clash-daemon process dies
-    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
-    tail --pid=${pid} -f /dev/null || true
-    if [ "$IP_ROUTE" == "1" ]; then
-        echolog "unset iproutes ..."
-        __=`unsetroute 2>&1 >/dev/null` || true
-        echolog "done."
-    fi
-    pid=`cat /var/subconverter.pid` || true
-    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
-    exit 0
-}
-trap _term SIGTERM SIGINT ERR
 # 初始化 /etc/clash
 if [ ! -f "/etc/clash/Country.mmdb" ]; then
     cp -arp /default/clash/Country.mmdb /etc/clash/Country.mmdb
@@ -67,11 +73,14 @@ fi
 if [ ! -d "/etc/clash/subconverter" ]; then
     cp -arp /default/subconverter /etc/clash/subconverter
 fi
+if [ ! -d "/etc/clash/exports" ]; then
+    cp -arp /default/exports /etc/clash/exports
+fi
 chmod -R a+rw /etc/clash
 # 启动订阅转换服务
 if [ "$ENABLE_SUBCONV" == "1" ]; then
     echolog "启动订阅转换服务..."
-    nohup /etc/clash/subconverter/subconverter >/etc/clash/subconverter.log 2>&1 &
+    /etc/clash/subconverter/subconverter >/etc/clash/subconverter.log 2>&1 &
     echo $! > /var/subconverter.pid
     while :
     do
@@ -82,10 +91,25 @@ if [ "$ENABLE_SUBCONV" == "1" ]; then
             break
         fi
     done
+    # 启动规则文件服务(用于存放自定义订阅转换规则ini)
+    echolog "启动规则文件服务..."
+    python3 -u -m http.server $EXPORT_DIR_PORT -b $EXPORT_DIR_BIND --directory /etc/clash/exports >/etc/clash/export_dir_server.log 2>&1 &
+    echo $! > /var/export_dir_server.pid
+    while :
+    do
+        startup="`grep 'Serving HTTP on' /etc/clash/export_dir_server.log`" || true
+        if [ "$startup" != "" ]; then
+            echolog "规则文件服务就绪"
+            echolog $startup
+            break
+        fi
+    done
 fi
 # 转换订阅
 if [ "$SUBSCR_URLS" != "" ]; then
     SINCE=`file_expired /etc/clash/.subscr_expr $SUBSCR_EXPR`
+    echolog "    转换服务: $SUBCONV_URL"
+    echolog "    转换规则: $REMOTE_CONV_RULE"
     if [ "$SINCE" == "-1" ] || [ ! -f "/etc/clash/config.yaml" ]; then
         echolog "订阅已过期 重新订阅中..."
         # 如果依赖本地订阅, 但没有启动服务;
@@ -146,5 +170,5 @@ if [ "$IP_ROUTE" == "1" ]; then
     echolog "done."
 fi
 echolog "Dashboard Address: http://"`ip a | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' |head -n 1`":$DASH_PORT/ui"
-nohup tail -f /etc/clash/clash.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {}  2>&1 &
+tail -f /etc/clash/clash.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {}  2>&1 &
 wait
