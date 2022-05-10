@@ -1,8 +1,33 @@
 # chislash
 - 开箱即用的clash镜像
+
 # 警告
-- 十分**不建议**在云服务器(甲骨文,AWS...)上使用！！ 任何意外情况都可能导致你的服务器失联
-# 使用
+- 十分**不建议**在云服务器(甲骨文,AWS...)上使用透明代理特性(IP_ROUTE=1)！ 任何意外情况都可能导致你的服务器失联
+
+# 快速上手
+- 将Linux服务器(树莓派,工控机,闲置电脑)作为透明代理
+- 一行搞定
+```bash
+sudo docker run --name chislash \
+    --network="host" \
+    --privileged \
+    --restart unless-stopped -it \
+    -e SUBSCR_URLS=<填上你的节点订阅链接或代理节点的分享链接, 多个用'|'分隔> \
+    -v $HOME/.config/chislash:/etc/clash \
+    -v /dev:/dev \
+    -v /lib/modules:/lib/modules \
+    chisbread/chislash:latest
+```
+- 成功启动, 输出如下图的日志
+![quickstart](https://github.com/ChisBread/chislash/raw/master/images/quickstart.png)
+- 如果失败, 请检查
+  - 订阅链接(SUBSCR_URLS)是否能正常访问. 如果不能, 请联系供应商
+  - 规则链接(REMOTE_CONV_RULE)是否能正常访问. 可添加 *-e REMOTE_CONV_RULE=""* 到命令中重试
+- 此时Linux服务器本身已经被代理接管, 将其设置为网关后, 其它机器也可获得透明代理
+- 控制台
+  - **http://< 服务器IP >:8080/ui**  为clash的WebUI, 用于切换节点
+  - **http://< 服务器IP >:25500** 为subconverter后端服务地址, 用于节点订阅转换
+# 进阶使用
 - 一些细节
   - 透明代理: 容器自动映射路由表，劫持本地DNS流量实现本地透明代理; 亦可作为网关使用, 需要指定DNS为网关IP
   - 配置文件: 容器会修改部分用户配置来统一端口和部分高级配置(关闭容器后会恢复), utils/override.py中定义了本镜像修改用户配置的方式
@@ -39,17 +64,18 @@ services:
     restart: unless-stopped
 ```
 - docker run (参考docker-compose)
-```bash
-sudo docker run --name chislash \
-    --network="host" \
-    --privileged \
-    --restart unless-stopped -d \
-    -v /path/to/etc/clash:/etc/clash \
-    -v /dev:/dev \
-    -v /lib/modules:/lib/modules \
-    -e SUBSCR_URLS=<URLs split by '|'> \
-    chisbread/chislash:latest
-```
+
+# 支持情况
+
+| OS   | 透明代理/网关(Transparent Gateway) | 服务端(HTTP/SOCKS5 Proxy Server)  |
+| -------------  |  ------------- |  ------------- |
+| Linux (with tproxy module) | ✅  | ✅  |
+| Linux (without tproxy module)  | ❎ | ✅  |
+| Windows   | ❎ | ✅  |
+| macOS   | ❎ | ✅  |
+
 # 感谢
 - https://github.com/Dreamacro/clash
 - https://github.com/haishanh/yacd
+- https://github.com/tindy2013/subconverter
+- https://github.com/ACL4SSR/ACL4SSR
