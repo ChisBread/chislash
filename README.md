@@ -12,7 +12,7 @@ sudo docker run --name chislash \
     --network="host" \
     --privileged \
     --rm -it \
-    -e SUBSCR_URLS=<填上你的节点订阅链接或代理节点的分享链接, 多个用'|'分隔> \
+    -e SUBSCR_URLS=<(自带配置可不填)节点订阅链接或代理节点的分享链接, 多个用'|'分隔> \
     -v $HOME/.config/chislash:/etc/clash \
     -v /dev:/dev \
     -v /lib/modules:/lib/modules \
@@ -35,7 +35,7 @@ sudo docker run --name chislash \
     --network="host" \
     --rm -it \
     -e IP_ROUTE=0 \
-    -e SUBSCR_URLS=<填上你的节点订阅链接或代理节点的分享链接, 多个用'|'分隔> \
+    -e SUBSCR_URLS=<(自带配置可不填)节点订阅链接或代理节点的分享链接, 多个用'|'分隔> \
     -v $HOME/.config/chislash:/etc/clash \
     chisbread/chislash:latest
 ```
