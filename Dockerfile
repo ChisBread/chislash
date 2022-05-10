@@ -5,7 +5,9 @@ RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
     && apt-get install -y wget xz-utils iproute2 iptables \
         curl python3 python3-yaml kmod \
     && rm -rf /var/lib/apt/lists/* \
-    && rm /bin/sh && ln -s /bin/bash /bin/sh
+    && rm /bin/sh && ln -s /bin/bash /bin/sh \
+    && mv -v /usr/sbin/ip6tables /usr/sbin/ip6tables--DISABLED-$(date +"%Y-%m-%d--%H-%M") \
+    && cp -v /usr/sbin/ip6tables-nft /usr/sbin/ip6tables
 ARG CLASHVER=v1.10.6
 ARG YACDVER=v0.3.4
 ARG SCVER=v0.7.2

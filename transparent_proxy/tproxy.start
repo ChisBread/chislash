@@ -83,19 +83,17 @@ fi
 # CLASH_LOCAL 链会为本机流量打 mark, 打过 mark 的流量会重新回到 PREROUTING 上
 $IPTABLES_CMD -t mangle -A OUTPUT -j CLASH_LOCAL
 
-# 修复 ICMP(ping)
+# Fake-IP模式 修复 ICMP(ping) 
 # 这并不能保证 ping 结果有效(CLASH 等不支持转发 ICMP), 只是让它有返回结果而已
 # --to-destination 设置为一个可达的地址即可
-if [ "$IP_STACK" == "ipv4" ]; then
-    sysctl -w net.$IP_STACK.conf.all.route_localnet=1 >/dev/null 2>&1
-    $IPTABLES_CMD -t nat -A PREROUTING -p icmp -d 198.18.0.0/16 -j DNAT --to-destination 127.0.0.1
-fi
+# if [ "$IP_STACK" == "ipv4" ]; then
+#     sysctl -w net.$IP_STACK.conf.all.route_localnet=1 >/dev/null 2>&1
+#     $IPTABLES_CMD -t nat -A PREROUTING -p icmp -d 198.18.0.0/16 -j DNAT --to-destination 127.0.0.1
+# fi
 
 ######################## DNS流量设置 ########################
 
 # 转发所有 DNS 查询到 1053 端口
-# 此操作会导致所有 DNS 请求全部返回虚假 IP(fake ip 198.18.0.1/16)
-# $IPTABLES_CMD -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to 1053
 
 # 如果想要 dig 等命令可用, 可以只处理 DNS SERVER 设置为当前内网的 DNS 请求
 # $IPTABLES_CMD -t nat -I PREROUTING -p udp --dport 53 -d 192.168.0.0/16 -j REDIRECT --to 1053

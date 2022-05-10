@@ -46,10 +46,11 @@ $IPTABLES_CMD -t nat -X CLASH_DNS_LOCAL || true
 ################ 清理TPROXY规则 ##################
 while :
 do
-    if [ "$IP_STACK" == "ipv4" ]; then
-        $IPTABLES_CMD -t nat -D PREROUTING -p icmp -d 198.18.0.0/16 -j DNAT --to-destination 127.0.0.1
-        if [ "$?" == "0" ]; then continue; fi
-    fi
+    # Fake-IP模式 清理
+    # if [ "$IP_STACK" == "ipv4" ]; then
+    #     $IPTABLES_CMD -t nat -D PREROUTING -p icmp -d 198.18.0.0/16 -j DNAT --to-destination 127.0.0.1
+    #     if [ "$?" == "0" ]; then continue; fi
+    # fi
     $IPTABLES_CMD -t mangle -D OUTPUT -j CLASH_LOCAL
     if [ "$?" == "0" ]; then continue; fi
     $IPTABLES_CMD -t mangle -D OUTPUT -p tcp -m owner --uid-owner clash -j RETURN

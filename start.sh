@@ -100,6 +100,12 @@ if [ "$ENABLE_SUBCONV" == "1" ]; then
             echolog "[subconverter] "$startup
             break
         fi
+        PID_EXIST=$(ps aux | awk '{print $2}'| grep -w `cat /var/subconverter.pid`) || true
+        if [ ! $PID_EXIST ];then
+            echoerr "订阅转换服务未能启动, 请检查端口是否被占用"
+            $NO_ENGLISH || echoerr "Subconverter is not running"
+            exit 1
+        fi
     done
     # 启动规则文件服务(用于存放自定义订阅转换规则ini)
     echolog "启动规则文件服务..."
@@ -114,6 +120,12 @@ if [ "$ENABLE_SUBCONV" == "1" ]; then
             $NO_ENGLISH || echolog "RulesExporter is ready"
             echolog "[rulesexporter] "$startup
             break
+        fi
+        PID_EXIST=$(ps aux | awk '{print $2}'| grep -w `cat /var/rulesexporter.pid`) || true
+        if [ ! $PID_EXIST ];then
+            echoerr "规则文件服务未能启动, 请检查端口是否被占用"
+            $NO_ENGLISH || echoerr "RulesExporter is not running"
+            exit 1
         fi
     done
 fi
