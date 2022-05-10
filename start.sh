@@ -77,7 +77,7 @@ if [ "$ENABLE_SUBCONV" == "1" ]; then
         startup="`grep 'Startup completed.' /etc/clash/subconverter.log`" || true
         if [ "$startup" != "" ]; then
             echolog "订阅转换服务就绪"
-            echo $startup
+            echolog $startup
             break
         fi
     done
@@ -146,5 +146,5 @@ if [ "$IP_ROUTE" == "1" ]; then
     echolog "done."
 fi
 echolog "Dashboard Address: http://"`ip a | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' |head -n 1`":$DASH_PORT/ui"
-nohup tail -f /etc/clash/clash.log &
+nohup tail -f /etc/clash/clash.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {} &
 wait
