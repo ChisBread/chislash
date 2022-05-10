@@ -131,21 +131,32 @@ if [ "$SUBSCR_URLS" != "" ]; then
         $NO_ENGLISH || echolog "Subscription has expired, re-subscribing..."
         # 如果依赖本地订阅, 但没有启动服务;
         if [ "`echo "$SUBSCR_URLS" |grep 'http://127.0.0.1:25500/sub'`" != "" ] && [ "$ENABLE_SUBCONV" != "1" ]; then
-                echoerr "依赖本地订阅转换服务, 请设置ENABLE_SUBCONV=1"
-                $NO_ENGLISH || echoerr "Please set ENABLE_SUBCONV=1 to enable local subconverter"
-                exit 1
+            echoerr "依赖本地订阅转换服务, 请设置ENABLE_SUBCONV=1"
+            $NO_ENGLISH || echoerr "Please set ENABLE_SUBCONV=1 to enable local subconverter"
+            exit 1
         fi
-        curl --get \
+        curl -s --get \
             --data-urlencode "target=clash" \
             --data-urlencode "url=$SUBSCR_URLS" \
             --data-urlencode "config=$REMOTE_CONV_RULE" \
-            "$SUBCONV_URL" > /etc/clash/config.yaml
+            "$SUBCONV_URL" > /etc/clash/config.yaml.download
+        # 错误订阅/转换数据
+        VALID="`cat /etc/clash/config.yaml.download | grep -P '(bind-address|mode|port|rules)'`" || true
+        if [ "$?" != "0" ] || [ "$VALID" == "" ]; then
+            mv /etc/clash/config.yaml.download /etc/clash/config.yaml.wrong
+            echoerr "节点订阅失败"
+            $NO_ENGLISH || echoerr "Subscription failed"
+            exit 1
+        fi
+        mv /etc/clash/config.yaml.download /etc/clash/config.yaml
         touch /etc/clash/.subscr_expr
     else
         echolog "订阅有效, ${SINCE} 秒后重新订阅"
         $NO_ENGLISH || echolog "Subscription expires after ${SINCE} seconds"
     fi
 fi
+echolog "使用环境变量覆盖config.yaml设置"
+$NO_ENGLISH || echolog "Override config.yaml with environment variables"
 python3 /default/clash/utils/override.py \
     "/etc/clash/config.yaml" \
     "$REQUIRED_CONFIG" \
@@ -156,13 +167,15 @@ python3 /default/clash/utils/override.py \
     "$LOG_LEVEL" \
     "$IPV6_PROXY"
 ################### 启动clash服务 ###################
+echolog "Clash启动中..."
+$NO_ENGLISH || echolog "Clash is starting ..."
 su - clash -c "/usr/bin/clash -d /etc/clash -ext-ctl 0.0.0.0:$DASH_PORT -ext-ui $DASH_PATH"  >/etc/clash/clash.log 2>&1 &
 EXPID=$!
 # 等待,直到SOCKS端口被监听, 或者clash启动失败
 while :
 do
     PID=`ps -def|grep -P '^clash'|awk '{print $2}'` || true
-    PORT_EXIST=`ss -tlnp| awk '{print $4}'|grep -P ".*:$CLASH_SOCKS_PORT"` || true
+    PORT_EXIST=`ss -tlnp | awk '{print $4}' | grep -P ".*:$CLASH_SOCKS_PORT" | head -n 1` || true
     if [ "$PID" == "" ] || [ "$PORT_EXIST" == "" ]; then
         EXPID_EXIST=$(ps aux | awk '{print $2}'| grep -w $EXPID) || true
         if [ ! $EXPID_EXIST ];then
@@ -172,16 +185,17 @@ do
             fi
             exit 1
         fi
-        echolog "等待Clash启动"
-        $NO_ENGLISH || echolog " Waiting for clash ..."
         sleep 1
         continue
     fi
     echo $PID > /var/clash.pid
     break
 done
+echolog "Clash已就绪"
+$NO_ENGLISH || echolog "Clash is ready"
+
 if [ "$IP_ROUTE" == "1" ]; then
-    echolog "设置路由表 ..."
+    echolog "设置路由规则..."
     $NO_ENGLISH || echolog "Set iproutes ..."
     __=`unsetroute >/dev/null 2>&1` || true
     touch /tmp/setroute.log
