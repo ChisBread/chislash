@@ -3,7 +3,7 @@
 
 ## 警告
 - 十分**不建议**在云服务器(甲骨文,AWS...)上使用透明代理特性(IP_ROUTE=1)！ 任何意外情况都可能导致你的服务器失联
-
+- 如果依然要使用,请关闭透明代理特性,作为HTTP/SOCKS5代理服务器使用; 参考[其它场景](#其它场景)中的"非透明代理"
 ## 快速上手
 - 将Linux服务器(树莓派,工控机,闲置电脑)作为透明代理
 - 一行搞定
@@ -32,13 +32,11 @@ sudo docker run --name chislash \
 - 非透明代理
 ```bash
 sudo docker run --name chislash \
+    --network="host" \
     --rm -it \
-    --privileged \
     -e IP_ROUTE=0 \
     -e SUBSCR_URLS=<填上你的节点订阅链接或代理节点的分享链接, 多个用'|'分隔> \
     -v $HOME/.config/chislash:/etc/clash \
-    -p 7890:7890 -p 7891:7891 \
-    -p 8080:8080 -p 25500:25500 \
     chisbread/chislash:latest
 ```
 - 关闭IPv6代理: *-e IPV6_PROXY=0*
