@@ -1,5 +1,5 @@
 # chislash
-- 开箱即用的clash镜像
+- 开箱即用的clash透明网关
 
 # 警告
 - 十分**不建议**在云服务器(甲骨文,AWS...)上使用透明代理特性(IP_ROUTE=1)！ 任何意外情况都可能导致你的服务器失联
@@ -11,7 +11,7 @@
 sudo docker run --name chislash \
     --network="host" \
     --privileged \
-    --restart unless-stopped -it \
+    --rm -it \
     -e SUBSCR_URLS=<填上你的节点订阅链接或代理节点的分享链接, 多个用'|'分隔> \
     -v $HOME/.config/chislash:/etc/clash \
     -v /dev:/dev \
@@ -23,6 +23,7 @@ sudo docker run --name chislash \
 - 如果失败, 请检查
   - 订阅链接(SUBSCR_URLS)是否能正常访问. 如果不能, 请联系供应商
   - 规则链接(REMOTE_CONV_RULE)是否能正常访问. 可添加 *-e REMOTE_CONV_RULE=""* 到命令中重试
+- 调试通过后, 作为后台服务: 将 *--rm -it* 改为 *--restart unless-stopped -d*
 - 此时Linux服务器本身已经被代理接管, 将其设置为网关后, 其它机器也可获得透明代理
 - 控制台
   - **http://< 服务器IP >:8080/ui**  为clash的WebUI, 用于切换节点
