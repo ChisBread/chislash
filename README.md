@@ -1,9 +1,9 @@
 # chislash
 - 开箱即用的clash透明网关
-
+- 也可作为[纯订阅转换服务](#其它场景)使用
 ## 警告
 - 十分**不建议**在云服务器(甲骨文,AWS...)上使用透明代理特性(IP_ROUTE=1)！ 任何意外情况都可能导致你的服务器失联
-- 如果依然要使用,请关闭透明代理特性,作为HTTP/SOCKS5代理服务器使用; 参考[其它场景](#其它场景)中的"非透明代理"
+- 如果依然要使用,请关闭透明代理特性,作为HTTP/SOCKS5代理服务器使用; 参考[非透明代理](#其它场景)
 ## 环境检查
 - 检查是否支持TProxy(支持TProxy, 才能使用透明代理)
 ```
@@ -54,6 +54,19 @@ sudo docker run --name chislash \
 ```
 - 关闭IPv6代理: *-e IPV6_PROXY=0*
 - 关闭UDP代理: *-e UDP_PROXY=0*
+- 纯订阅转换服务(subconverter)
+```bash
+sudo docker run --name chislash \
+    --rm -it \
+    -e ENABLE_CLASH=0 \
+    -p 25500:25500 \
+    -p 8091:8091 \
+    -e SUBSCR_URLS=<(可不填, 填写后启动会更新/etc/clash/config.yaml)> \
+    -v $HOME/.config/chislash:/etc/clash \
+    chisbread/chislash:latest
+```
+  - 转换服务: *http://127.0.0.1:25500/sub*
+  - 转换规则: *http://127.0.0.1:8091/ACL4SSR/Clash/config/* 
 ## 进阶使用
 - 一些细节
   - 透明代理: 容器自动映射路由表, 劫持本地DNS流量实现本地透明代理; 亦可作为网关使用, 需要将网关和DNS指定为服务器IP

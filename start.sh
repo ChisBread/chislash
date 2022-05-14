@@ -13,7 +13,7 @@ _term() {
     # terminate when the clash-daemon process dies
     __=`kill -9 ${pid} 2>&1 >/dev/null` || true
     tail --pid=${pid} -f /dev/null || true
-    if [ "$IP_ROUTE" == "1" ]; then
+    if [ "$ENABLE_CLASH" == "1" ] && [ "$IP_ROUTE" == "1" ]; then
         echolog "unset iproutes ..."
         __=`unsetroute 2>&1 >/dev/null` || true
         echolog "done."
@@ -78,12 +78,6 @@ if [ ! -d "/etc/clash/subconverter" ]; then
 fi
 if [ ! -d "/etc/clash/exports" ]; then
     cp -arp /default/exports /etc/clash/exports
-fi
-if [ "$IP_ROUTE" == "1" ]; then
-    setcap 'cap_net_admin,cap_net_bind_service=+ep' /usr/bin/clash
-else
-    setcap 'cap_net_admin,cap_net_bind_service=-ep' /usr/bin/clash
-    CLASH_TPROXY_PORT=0
 fi
 chmod -R a+rw /etc/clash
 ################### 生成config.yaml ###################
@@ -169,62 +163,72 @@ if [ "$SUBSCR_URLS" != "" ]; then
         $NO_ENGLISH || echolog "Subscription expires after ${SINCE} seconds"
     fi
 fi
-echolog "使用环境变量覆盖config.yaml设置"
-$NO_ENGLISH || echolog "Override config.yaml with environment variables"
-python3 /default/clash/utils/override.py \
-    "/etc/clash/config.yaml" \
-    "$REQUIRED_CONFIG" \
-    "$CLASH_HTTP_PORT" \
-    "$CLASH_SOCKS_PORT" \
-    "$CLASH_TPROXY_PORT" \
-    "$CLASH_MIXED_PORT" \
-    "$LOG_LEVEL" \
-    "$IPV6_PROXY"
-################### 启动clash服务 ###################
-echolog "Clash启动中..."
-$NO_ENGLISH || echolog "Clash is starting ..."
-su - clash -c "/usr/bin/clash -d /etc/clash -ext-ctl 0.0.0.0:$DASH_PORT -ext-ui $DASH_PATH"  >/etc/clash/clash.log 2>&1 &
-EXPID=$!
-# 等待,直到SOCKS端口被监听, 或者clash启动失败
-while :
-do
-    PID=`ps -def|grep -P '^clash'|awk '{print $2}'` || true
-    PORT_EXIST=`ss -tlnp | awk '{print $4}' | grep -P ".*:$CLASH_SOCKS_PORT" | head -n 1` || true
-    if [ "$PID" == "" ] || [ "$PORT_EXIST" == "" ]; then
-        EXPID_EXIST=$(ps aux | awk '{print $2}'| grep -w $EXPID) || true
-        if [ ! $EXPID_EXIST ];then
-            echoerr "clash is not running"
-            if [ "`cat /etc/clash/clash.log| grep 'Operation not permitted'`" != "" ]; then
-                echoerr "privileged must be true"
+# 启动clash服务
+if [ "$ENABLE_CLASH" == "1" ]; then
+    if [ "$IP_ROUTE" == "1" ]; then
+        setcap 'cap_net_admin,cap_net_bind_service=+ep' /usr/bin/clash
+    else
+        setcap 'cap_net_admin,cap_net_bind_service=-ep' /usr/bin/clash
+        CLASH_TPROXY_PORT=0
+    fi
+    echolog "使用环境变量覆盖config.yaml设置"
+    $NO_ENGLISH || echolog "Override config.yaml with environment variables"
+    python3 /default/clash/utils/override.py \
+        "/etc/clash/config.yaml" \
+        "$REQUIRED_CONFIG" \
+        "$CLASH_HTTP_PORT" \
+        "$CLASH_SOCKS_PORT" \
+        "$CLASH_TPROXY_PORT" \
+        "$CLASH_MIXED_PORT" \
+        "$LOG_LEVEL" \
+        "$IPV6_PROXY"
+    ################### 启动clash服务 ###################
+    echolog "Clash启动中..."
+    $NO_ENGLISH || echolog "Clash is starting ..."
+    su - clash -c "/usr/bin/clash -d /etc/clash -ext-ctl 0.0.0.0:$DASH_PORT -ext-ui $DASH_PATH"  >/etc/clash/clash.log 2>&1 &
+    EXPID=$!
+    # 等待,直到SOCKS端口被监听, 或者clash启动失败
+    while :
+    do
+        PID=`ps -def|grep -P '^clash'|awk '{print $2}'` || true
+        PORT_EXIST=`ss -tlnp | awk '{print $4}' | grep -P ".*:$CLASH_SOCKS_PORT" | head -n 1` || true
+        if [ "$PID" == "" ] || [ "$PORT_EXIST" == "" ]; then
+            EXPID_EXIST=$(ps aux | awk '{print $2}'| grep -w $EXPID) || true
+            if [ ! $EXPID_EXIST ];then
+                echoerr "clash is not running"
+                if [ "`cat /etc/clash/clash.log| grep 'Operation not permitted'`" != "" ]; then
+                    echoerr "privileged must be true"
+                fi
+                exit 1
             fi
+            sleep 1
+            continue
+        fi
+        echo $PID > /var/clash.pid
+        break
+    done
+    echolog "Clash已就绪"
+    $NO_ENGLISH || echolog "Clash is ready"
+
+    if [ "$IP_ROUTE" == "1" ]; then
+        echolog "设置路由规则..."
+        $NO_ENGLISH || echolog "Set iproutes ..."
+        __=`unsetroute >/dev/null 2>&1` || true
+        touch /tmp/setroute.log
+        __=`setroute >/tmp/setroute.log 2>/tmp/setroute.err` || true
+        cat /tmp/setroute.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "[setroute] $@"' _ {}
+        cat /tmp/setroute.err | xargs -n 1 -P 10 -I {} bash -c 'echoerr "[setroute] $@"' _ {}
+        if [ "`cat /tmp/setroute.log|grep "tproxy is not supported" `" ]; then
+            echoerr "当前不支持TProxy! 自动加载xt_TPROXY失败, 请尝试手动执行: 'modprobe xt_TPROXY'"
+            $NO_ENGLISH || echoerr "TProxy is not supported"
             exit 1
         fi
-        sleep 1
-        continue
     fi
-    echo $PID > /var/clash.pid
-    break
-done
-echolog "Clash已就绪"
-$NO_ENGLISH || echolog "Clash is ready"
-
-if [ "$IP_ROUTE" == "1" ]; then
-    echolog "设置路由规则..."
-    $NO_ENGLISH || echolog "Set iproutes ..."
-    __=`unsetroute >/dev/null 2>&1` || true
-    touch /tmp/setroute.log
-    __=`setroute >/tmp/setroute.log 2>/tmp/setroute.err` || true
-    cat /tmp/setroute.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "[setroute] $@"' _ {}
-    cat /tmp/setroute.err | xargs -n 1 -P 10 -I {} bash -c 'echoerr "[setroute] $@"' _ {}
-    if [ "`cat /tmp/setroute.log|grep "tproxy is not supported" `" ]; then
-        echoerr "当前不支持TProxy! 自动加载xt_TPROXY失败, 请尝试手动执行: 'modprobe xt_TPROXY'"
-        $NO_ENGLISH || echoerr "TProxy is not supported"
-        exit 1
-    fi
+    echolog "Clash控制面板: http://$LOCAL_IP:$DASH_PORT/ui"
+    $NO_ENGLISH || echolog "Dashboard: http://$LOCAL_IP:$DASH_PORT/ui"
+    tail -f /etc/clash/clash.log \
+        | grep -v 'Start initial compatible provider' \
+        | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {}  2>&1 &
 fi
-echolog "Clash控制面板: http://$LOCAL_IP:$DASH_PORT/ui"
-$NO_ENGLISH || echolog "Dashboard: http://$LOCAL_IP:$DASH_PORT/ui"
-tail -f /etc/clash/clash.log \
-    | grep -v 'Start initial compatible provider' \
-    | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {}  2>&1 &
+
 wait

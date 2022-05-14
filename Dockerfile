@@ -38,6 +38,8 @@ RUN echo 'detect arch ...' \
     && gunzip master.tar.gz && tar xvf master.tar && rm master.tar \
     && mkdir /default/exports && mv ACL4SSR-master /default/exports/ACL4SSR \
     && chmod -R a+r /default/
+    
+ENV ENABLE_CLASH=1
 ENV REQUIRED_CONFIG=""
 ENV CLASH_HTTP_PORT=7890
 ENV CLASH_SOCKS_PORT=7891
