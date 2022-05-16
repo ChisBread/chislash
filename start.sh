@@ -9,19 +9,17 @@ fi
 _term() {
     echolog "Caught SIGTERM signal!"
     echolog "Tell the clash session to shut down."
-    pid=`cat /var/clash.pid` || true
     # terminate when the clash-daemon process dies
-    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
+    pid=`cat /var/clash.pid` || true
+    kill -9 ${pid} >/dev/null 2>&1 || true
     tail --pid=${pid} -f /dev/null || true
     if [ "$ENABLE_CLASH" == "1" ] && [ "$IP_ROUTE" == "1" ]; then
         echolog "unset iproutes ..."
-        __=`unsetroute 2>&1 >/dev/null` || true
+        unsetroute >/dev/null 2>&1 || true
         echolog "done."
     fi
-    pid=`cat /var/subconverter.pid` || true
-    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
-    pid=`cat /var/rulesexporter.pid` || true
-    __=`kill -9 ${pid} 2>&1 >/dev/null` || true
+    kill -9 `cat /var/subconverter.pid` >/dev/null 2>&1 || true
+    kill -9 `cat /var/rulesexporter.pid` >/dev/null 2>&1 || true
     exit 0
 }
 trap _term SIGTERM SIGINT ERR
@@ -213,9 +211,9 @@ if [ "$ENABLE_CLASH" == "1" ]; then
     if [ "$IP_ROUTE" == "1" ]; then
         echolog "设置路由规则..."
         $NO_ENGLISH || echolog "Set iproutes ..."
-        __=`unsetroute >/dev/null 2>&1` || true
+        unsetroute >/dev/null 2>&1 || true
         touch /tmp/setroute.log
-        __=`setroute >/tmp/setroute.log 2>/tmp/setroute.err` || true
+        setroute >/tmp/setroute.log 2>/tmp/setroute.err || true
         cat /tmp/setroute.log | xargs -n 1 -P 10 -I {} bash -c 'echolog "[setroute] $@"' _ {}
         cat /tmp/setroute.err | xargs -n 1 -P 10 -I {} bash -c 'echoerr "[setroute] $@"' _ {}
         if [ "`cat /tmp/setroute.log|grep "tproxy is not supported" `" ]; then
