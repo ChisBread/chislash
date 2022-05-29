@@ -166,7 +166,7 @@ if [ "$ENABLE_CLASH" == "1" ]; then
     if [ "$IP_ROUTE" == "1" ]; then
         setcap 'cap_net_admin,cap_net_bind_service=+ep' /usr/bin/clash
     else
-        setcap 'cap_net_admin,cap_net_bind_service=-ep' /usr/bin/clash
+        setcap 'cap_net_admin,cap_net_bind_service=-ep' /usr/bin/clash || true
         CLASH_TPROXY_PORT=0
     fi
     echolog "使用环境变量覆盖config.yaml设置"
