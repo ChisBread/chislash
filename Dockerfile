@@ -7,7 +7,10 @@ RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
     && rm -rf /var/lib/apt/lists/* \
     && rm /bin/sh && ln -s /bin/bash /bin/sh \
     && mv -v /usr/sbin/ip6tables /usr/sbin/ip6tables--DISABLED-$(date +"%Y-%m-%d--%H-%M") \
-    && cp -v /usr/sbin/ip6tables-nft /usr/sbin/ip6tables
+    && cp -v /usr/sbin/ip6tables-nft /usr/sbin/ip6tables \
+    && mv -v /usr/sbin/iptables /usr/sbin/iptables--DISABLED-$(date +"%Y-%m-%d--%H-%M") \
+    && cp -v /usr/sbin/iptables-nft /usr/sbin/iptables
+
 ARG CLASHVER=v1.10.6
 ARG YACDVER=v0.3.4
 ARG SCVER=v0.7.2
