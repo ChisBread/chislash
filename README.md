@@ -101,7 +101,7 @@ services:
       # REMOTE_CONV_RULE: 默认使用内部服务提供的链接 "http://127.0.0.1:8091/ACL4SSR/Clash/config/ACL4SSR_Online_Full.ini"
       # 在浏览器打开 http://< 服务器IP >:8091/ACL4SSR/Clash/config/ 即可查看内部服务支持的规则列表
       - EXPORT_DIR_PORT=8091
-      - EXPORT_DIR_BIND='0.0.0.0'
+      - EXPORT_DIR_BIND=0.0.0.0
       - NO_ENGLISH=true        # optional (default:true) 提醒自己这玩意主要是国人用
     volumes:
       - <path to config>:/etc/clash # required config.yaml的存放路径
