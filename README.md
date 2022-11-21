@@ -103,6 +103,7 @@ services:
       - EXPORT_DIR_PORT=8091
       - EXPORT_DIR_BIND=0.0.0.0
       - NO_ENGLISH=true        # optional (default:true) 提醒自己这玩意主要是国人用
+      - PREMIUM=false          # optional (default:false) 使用闭源版本内核
     volumes:
       - <path to config>:/etc/clash # required config.yaml的存放路径
       - /dev:/dev                   # optional 用于自动挂载TPROXY模块
@@ -115,12 +116,12 @@ services:
 
 ## 支持情况
 
-| OS   | 透明代理/网关(Transparent Gateway) | 服务端(HTTP/SOCKS5 Proxy Server)  |
-| -------------  |  ------------- |  ------------- |
-| Linux (with tproxy module) | ✅  | ✅  |
-| Linux (without tproxy module)  | ❎ | ✅  |
-| Windows   | ❓ | ❓ |
-| macOS   | ❓ | ❓ |
+| OS                            | 透明代理/网关(Transparent Gateway) | 服务端(HTTP/SOCKS5 Proxy Server) |
+| ----------------------------- | ---------------------------------- | -------------------------------- |
+| Linux (with tproxy module)    | ✅                                  | ✅                                |
+| Linux (without tproxy module) | ❎                                  | ✅                                |
+| Windows                       | ❓                                  | ❓                                |
+| macOS                         | ❓                                  | ❓                                |
 
 ## 感谢
 - https://github.com/Dreamacro/clash

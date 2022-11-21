@@ -12,6 +12,7 @@ RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
     && cp -v /usr/sbin/iptables-nft /usr/sbin/iptables
 
 ARG CLASHVER=v1.10.6
+ARG CLASHPREMIUMVER=2022.08.26
 ARG YACDVER=v0.3.4
 ARG SCVER=v0.7.2
 RUN echo 'detect arch ...' \
@@ -27,6 +28,12 @@ RUN echo 'detect arch ...' \
     && gunzip clash-linux-$ARCH-$CLASHVER.gz \
     && mv clash-linux-$ARCH-$CLASHVER /usr/bin/clash \
     && chmod 774 /usr/bin/clash \
+    && cp /usr/bin/clash /usr/bin/clash-open \
+    && echo 'install clash premium ...' \
+    && wget https://github.com/Dreamacro/clash/releases/download/premium/clash-linux-$ARCH-$CLASHPREMIUMVER.gz \
+    && gunzip clash-linux-$ARCH-$CLASHPREMIUMVER.gz \
+    && mv clash-linux-$ARCH-$CLASHPREMIUMVER /usr/bin/clash-premium \
+    && chmod 774 /usr/bin/clash-premium \
     && echo 'install yacd dashboard ...' \
     && wget https://github.com/haishanh/yacd/releases/download/$YACDVER/yacd.tar.xz \
     && mkdir -p /default/clash/dashboard \
@@ -65,7 +72,7 @@ ENV REMOTE_CONV_RULE="http://127.0.0.1:8091/ACL4SSR/Clash/config/ACL4SSR_Online_
 ENV EXPORT_DIR_PORT=8091
 ENV EXPORT_DIR_BIND='0.0.0.0'
 ENV NO_ENGLISH=true
-
+ENV PREMIUM=true
 EXPOSE $CLASH_HTTP_PORT $CLASH_SOCKS_PORT $CLASH_TPROXY_PORT $CLASH_MIXED_PORT $DASH_PORT $SUBCONV_PORT
 VOLUME /etc/clash
 COPY start.sh /

@@ -77,6 +77,11 @@ fi
 if [ ! -d "/etc/clash/exports" ]; then
     cp -arp /default/exports /etc/clash/exports
 fi
+if [ "${PREMIUM^^}" == "TRUE" ]; then
+    cp /usr/bin/clash-premium /usr/bin/clash
+else
+    cp /usr/bin/clash-open /usr/bin/clash
+fi
 chmod -R a+rw /etc/clash
 ################### 生成config.yaml ###################
 # 启动订阅转换服务
