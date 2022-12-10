@@ -22,7 +22,7 @@ RUN echo 'detect arch ...' \
         ARCH='armv7'; SC_ARCH='armv7'; \
         for i in /etc/ssl/certs/*.pem; do HASH=$(openssl x509 -hash -noout -in $i); ln -s $(basename $i) /etc/ssl/certs/$HASH.0; done \
     fi \
-    && if [[ `uname -p` =~ "aarch64" ]]; then ARCH='armv8';SC_ARCH='aarch64'; fi \
+    && if [[ `uname -p` =~ "aarch64" ]]; then ARCH='arm64';SC_ARCH='aarch64'; fi \
     && echo 'install clash ...' \
     && wget https://github.com/Dreamacro/clash/releases/download/$CLASHVER/clash-linux-$ARCH-$CLASHVER.gz \
     && gunzip clash-linux-$ARCH-$CLASHVER.gz \
