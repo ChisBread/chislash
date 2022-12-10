@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+source /etc/envinit.sh
+source /etc/utils.sh
+echolog "启动订阅转换服务..."
+$NO_ENGLISH || echolog "Subconverter is starting"
+/etc/clash/subconverter/subconverter >/etc/clash/subconverter.log 2>&1 &
+echo $! > /var/subconverter.pid
+while :
+do
+    startup="`grep 'Startup completed.' /etc/clash/subconverter.log`" || true
+    if [ "$startup" != "" ]; then
+        echolog "订阅转换服务就绪"
+        $NO_ENGLISH || echolog "Subconverter is ready"
+        echolog "[subconverter] "$startup
+        break
+    fi
+    PID_EXIST=$(ps aux | awk '{print $2}'| grep -w `cat /var/subconverter.pid`) || true
+    if [ ! $PID_EXIST ];then
+        echoerr "订阅转换服务未能启动, 请检查端口是否被占用"
+        $NO_ENGLISH || echoerr "Subconverter is not running"
+        exit 1
+    fi
+done
+wait

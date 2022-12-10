@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+source /etc/envinit.sh
+source /etc/utils.sh
+# 启动规则文件服务(用于存放自定义订阅转换规则ini)
+echolog "启动规则文件服务..."
+$NO_ENGLISH || echolog "RulesExporter is starting"
+python3 -u -m http.server $EXPORT_DIR_PORT -b $EXPORT_DIR_BIND --directory /etc/clash/exports >/etc/clash/rulesexporter.log 2>&1 &
+echo $! > /var/rulesexporter.pid
+while :
+do
+    startup="`grep 'Serving HTTP on' /etc/clash/rulesexporter.log`" || true
+    if [ "$startup" != "" ]; then
+        echolog "规则文件服务就绪"
+        $NO_ENGLISH || echolog "RulesExporter is ready"
+        echolog "[rulesexporter] "$startup
+        break
+    fi
+    PID_EXIST=$(ps aux | awk '{print $2}'| grep -w `cat /var/rulesexporter.pid`) || true
+    if [ ! $PID_EXIST ];then
+        echoerr "规则文件服务未能启动, 请检查端口是否被占用"
+        $NO_ENGLISH || echoerr "RulesExporter is not running"
+        exit 1
+    fi
+done
+wait

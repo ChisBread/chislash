@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
     && apt-get clean \
     && apt-get update \
-    && apt-get install -y wget xz-utils iproute2 iptables \
+    && apt-get install -y wget xz-utils iproute2 iptables supervisor \
         curl python3 python3-yaml kmod \
     && rm -rf /var/lib/apt/lists/* \
     && rm /bin/sh && ln -s /bin/bash /bin/sh \
@@ -11,9 +11,9 @@ RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
     && mv -v /usr/sbin/iptables /usr/sbin/iptables--DISABLED-$(date +"%Y-%m-%d--%H-%M") \
     && cp -v /usr/sbin/iptables-nft /usr/sbin/iptables
 
-ARG CLASHVER=v1.10.6
-ARG CLASHPREMIUMVER=2022.08.26
-ARG YACDVER=v0.3.4
+ARG CLASHVER=v1.12.0
+ARG CLASHPREMIUMVER=2022.11.25
+ARG YACDVER=v0.3.8
 ARG SCVER=v0.7.2
 RUN echo 'detect arch ...' \
     && SC_ARCH='unknown' && ARCH='unknown' \
@@ -75,9 +75,8 @@ ENV NO_ENGLISH=true
 ENV PREMIUM=true
 EXPOSE $CLASH_HTTP_PORT $CLASH_SOCKS_PORT $CLASH_TPROXY_PORT $CLASH_MIXED_PORT $DASH_PORT $SUBCONV_PORT
 VOLUME /etc/clash
-COPY start.sh /
-COPY transparent_proxy /transparent_proxy
+COPY root/ /myroot
+COPY root/entrypoint.sh /entrypoint.sh
 COPY utils /default/clash/utils
-RUN chmod +x /transparent_proxy/*
 RUN useradd -g root -s /bin/bash -u 1086 -m clash
-ENTRYPOINT [ "/start.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
