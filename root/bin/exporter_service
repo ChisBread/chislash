@@ -1,8 +1,27 @@
 #!/usr/bin/env bash
+if [ yes != "$STDBUF" ]; then
+    # exec 信号量捕获使能
+    STDBUF=yes exec /usr/bin/stdbuf -oL -eL "$0"
+    exit $?
+fi
+set -eE
 source /etc/envinit.sh
 source /etc/utils.sh
+PIDS=""
+_term() {
+    echolog "[exporter] Caught SIGTERM signal!"
+    pid=`cat /var/rulesexporter.pid` || true
+    kill -9 ${pid} >/dev/null 2>&1 || true
+    tail --pid=${pid} -f /dev/null || true
+    echo 'terminated' > /etc/clash/status/exporter
+    kill -9 ${PIDS} >/dev/null 2>&1 || true
+    exit 0
+}
+trap _term SIGTERM SIGINT ERR
+
 # 启动规则文件服务(用于存放自定义订阅转换规则ini)
 echolog "启动规则文件服务..."
+echo 'pending' > /etc/clash/status/exporter
 $NO_ENGLISH || echolog "RulesExporter is starting"
 python3 -u -m http.server $EXPORT_DIR_PORT -b $EXPORT_DIR_BIND --directory /etc/clash/exports >/etc/clash/rulesexporter.log 2>&1 &
 echo $! > /var/rulesexporter.pid
@@ -13,13 +32,18 @@ do
         echolog "规则文件服务就绪"
         $NO_ENGLISH || echolog "RulesExporter is ready"
         echolog "[rulesexporter] "$startup
+        echo 'running' > /etc/clash/status/exporter
         break
     fi
     PID_EXIST=$(ps aux | awk '{print $2}'| grep -w `cat /var/rulesexporter.pid`) || true
     if [ ! $PID_EXIST ];then
         echoerr "规则文件服务未能启动, 请检查端口是否被占用"
         $NO_ENGLISH || echoerr "RulesExporter is not running"
+        echo 'error' > /etc/clash/status/exporter
         exit 1
     fi
 done
+tail -f /etc/clash/rulesexporter.log \
+    | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {}  2>&1 &
+PIDS="$PIDS "$!
 wait

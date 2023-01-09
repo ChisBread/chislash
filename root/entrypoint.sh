@@ -14,6 +14,9 @@ source /etc/utils.sh
 if [ ! -f "/etc/clash/Country.mmdb" ]; then
     cp -arp /default/clash/Country.mmdb /etc/clash/Country.mmdb
 fi
+if [ ! -d "/etc/clash/status" ]; then
+    mkdir -p /etc/clash/status
+fi
 if [ ! -d "/etc/clash/dashboard" ]; then
     cp -arp /default/clash/dashboard /etc/clash/dashboard
 fi
@@ -63,4 +66,4 @@ echo 'export EXPORT_DIR_PORT='"$EXPORT_DIR_PORT" >> /etc/envinit.sh
 echo 'export EXPORT_DIR_BIND='"$EXPORT_DIR_BIND" >> /etc/envinit.sh
 echo 'export NO_ENGLISH='"$NO_ENGLISH" >> /etc/envinit.sh
 echo 'export PREMIUM='"$PREMIUM" >> /etc/envinit.sh
-exec bash -c 'supervisord -c /etc/supervisord.conf -l /var/log/supervisord.log'
+exec supervisord -c /etc/supervisord.conf -l /var/log/supervisord.log

@@ -21,11 +21,11 @@ unsetroute() {
 file_expired() {
     if [ ! -f "$1" ]; then
         echo -1
-        exit 0
+        return 0
     fi
     if [ $2 -eq 0 ]; then
         echo 0
-        exit 0
+        return 0
     fi
     last=`stat -c %Y $1`
     now=`date +%s`
@@ -35,10 +35,26 @@ file_expired() {
     else
         echo $(($2 - $since))
     fi
-    exit 0
+    return 0
+}
+wait_service_running() {
+    for i in `seq 1 ${3:-20}`
+    do
+        STATUS='none'
+        [ -f /etc/clash/status/$1 ] && STATUS=`cat /etc/clash/status/$1`
+        echolog "[wait_service_running] '$1' status is '$STATUS'"
+        if [ "$STATUS" == "running" ];then
+            return 0
+        fi
+        if [ "$STATUS" == "error" ];then
+            return 1
+        fi
+        sleep ${2:-0.5}
+    done
 }
 export -f echolog
 export -f echoerr
 export -f setroute
 export -f unsetroute
 export -f file_expired
+export -f wait_service_running

@@ -8,9 +8,10 @@ set -eE
 source /etc/envinit.sh
 source /etc/utils.sh
 # cleanup iptables
+PIDS=""
 _term() {
-    echolog "Caught SIGTERM signal!"
-    echolog "Tell the clash session to shut down."
+    echolog "[clash] Caught SIGTERM signal!"
+    echolog "[clash] Tell the clash session to shut down."
     # terminate when the clash-daemon process dies
     pid=`cat /var/clash.pid` || true
     kill -9 ${pid} >/dev/null 2>&1 || true
@@ -20,8 +21,7 @@ _term() {
         unsetroute >/dev/null 2>&1 || true
         echolog "done."
     fi
-    kill -9 `cat /var/subconverter.pid` >/dev/null 2>&1 || true
-    kill -9 `cat /var/rulesexporter.pid` >/dev/null 2>&1 || true
+    kill -9 ${PIDS} >/dev/null 2>&1 || true
     exit 0
 }
 trap _term SIGTERM SIGINT ERR
@@ -42,6 +42,12 @@ if [ "$SUBSCR_URLS" != "" ]; then
             echoerr "依赖本地订阅转换服务, 请设置ENABLE_SUBCONV=1"
             $NO_ENGLISH || echoerr "Please set ENABLE_SUBCONV=1 to enable local subconverter"
             exit 1
+        fi
+        echolog "等待订阅服务启动"
+        wait_service_running subconverter
+        if [ "`echo "$REMOTE_CONV_RULE" | grep "http://127.0.0.1:$EXPORT_DIR_PORT"`" != "" ]; then
+        echolog "等待规则服务启动"
+            wait_service_running exporter
         fi
         curl -s --get \
             --data-urlencode "target=clash" \
@@ -129,5 +135,6 @@ if [ "$ENABLE_CLASH" == "1" ]; then
     tail -f /etc/clash/clash.log \
         | grep -v 'Start initial compatible provider' \
         | xargs -n 1 -P 10 -I {} bash -c 'echolog "$@"' _ {}  2>&1 &
+    PIDS="$PIDS "$!
 fi
 wait
